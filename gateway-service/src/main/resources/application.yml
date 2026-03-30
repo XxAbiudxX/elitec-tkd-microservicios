@@ -3,10 +3,11 @@ server:
 
 eureka:
   client:
-    register-with-eureka: true # <-- Agrégale esto
-    fetch-registry: true      # <-- Y esto también
     serviceUrl:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+    # ESTO ES LO QUE FALTA:
+    register-with-eureka: true
+    fetch-registry: true
 
 spring:
   application:
@@ -16,38 +17,19 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            # Permitimos tu link de Vercel y el Live Server para evitar el error rojo de CORS
             allowedOriginPatterns: "*" 
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
+            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
             allowedHeaders: "*"
             allowCredentials: true
       discovery:
         locator:
           enabled: true
-          lower-case-service-id: true # Importante para que coincida con Eureka
+          lower-case-service-id: true
       routes:
         - id: auth-service
-          uri: lb://AUTH-SERVICE
+          # CAMBIO AQUÍ: Prueba ponerlo en minúsculas si en Eureka sale así, o viceversa
+          uri: lb://auth-service 
           predicates:
             - Path=/api/auth/**
-          filters:
-            - StripPrefix=1 # IMPORTANTE: Quita "/api" para que al Auth le llegue solo "/auth/login"
-
-        - id: student-service
-          uri: lb://STUDENT-SERVICE
-          predicates:
-            - Path=/api/alumnos/**
-          filters:
-            - StripPrefix=1
-
-        - id: attendance-service
-          uri: lb://ATTENDANCE-SERVICE
-          predicates:
-            - Path=/api/attendance/**
           filters:
             - StripPrefix=1
