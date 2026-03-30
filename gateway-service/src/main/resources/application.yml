@@ -17,7 +17,9 @@ spring:
       globalcors:
         corsConfigurations:
          '[/**]':
-           allowedOriginPatterns: "*"
+           allowedOriginPatterns:
+           - "https://elitec-tkd-microservicios.vercel.app"
+           - "http://127.0.0.1:5500"
            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
            allowedHeaders: "*"
            allowCredentials: true
