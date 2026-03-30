@@ -1,3 +1,7 @@
+// --- CONFIGURACIÓN DE LA NUBE ---
+// Reemplazamos localhost por tu nuevo link de Railway
+const API_BASE_URL = "https://gateway-service-production-2ae6.up.railway.app";
+
 // --- INICIAR SESIÓN ---
 document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -6,7 +10,8 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     try {
-        const res = await fetch('http://localhost:8080/api/auth/login', {
+        // Usamos la variable de la nube + la ruta de tu API
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -23,7 +28,7 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
             document.getElementById('loginError').style.display = 'block';
         }
     } catch (error) {
-        document.getElementById('loginError').innerText = "El servidor Gateway está apagado.";
+        document.getElementById('loginError').innerText = "Error de conexión con el Gateway en Railway.";
         document.getElementById('loginError').style.display = 'block';
     } finally {
         btn.innerHTML = 'Entrar al Dojo';
@@ -42,12 +47,12 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
         nombre: document.getElementById('regNombre').value,
         email: document.getElementById('regEmail').value,
         password: document.getElementById('regPassword').value,
-        rol: "ADMIN" // Por defecto le damos rol de admin
+        rol: "ADMIN"
     };
 
     try {
-        // Asumiendo que crearás un endpoint /register en tu auth-service
-        const res = await fetch('http://localhost:8080/api/auth/register', {
+        // Usamos la variable de la nube + la ruta de registro
+        const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nuevoUsuario)
@@ -55,13 +60,13 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
 
         if (res.ok) {
             alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
-            document.getElementById('login-tab').click(); // Volvemos a la pestaña de login
+            document.getElementById('login-tab').click(); 
             document.getElementById('formRegistro').reset();
         } else {
             alert("No se pudo crear la cuenta. Verifica que el backend tenga el endpoint /register.");
         }
     } catch (error) {
-        alert("Error de conexión con el servidor.");
+        alert("Error de conexión con el servidor en la nube.");
     } finally {
         btn.innerHTML = 'Registrar Administrador';
         btn.disabled = false;
