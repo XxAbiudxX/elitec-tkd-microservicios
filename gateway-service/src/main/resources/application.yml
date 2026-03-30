@@ -4,7 +4,8 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+      # Usamos la variable de Railway para conectar con la brújula real
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
 
 spring:
   application:
@@ -14,7 +15,8 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOriginPatterns: "*" # <-- Clave para que funcione con tu Live Server
+            # Permitimos tu link de Vercel y el Live Server para evitar el error rojo de CORS
+            allowedOriginPatterns: "*" 
             allowedMethods:
               - GET
               - POST
@@ -22,20 +24,29 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
-            allowCredentials: true # <-- ¡Esto permite que pasen los Tokens VIP!
+            allowCredentials: true
       discovery:
         locator:
           enabled: true
+          lower-case-service-id: true # Importante para que coincida con Eureka
       routes:
         - id: auth-service
-          uri: lb://auth-service
+          uri: lb://AUTH-SERVICE
           predicates:
             - Path=/api/auth/**
+          filters:
+            - StripPrefix=1 # IMPORTANTE: Quita "/api" para que al Auth le llegue solo "/auth/login"
+
         - id: student-service
-          uri: lb://student-service
+          uri: lb://STUDENT-SERVICE
           predicates:
             - Path=/api/alumnos/**
+          filters:
+            - StripPrefix=1
+
         - id: attendance-service
-          uri: lb://attendance-service
+          uri: lb://ATTENDANCE-SERVICE
           predicates:
             - Path=/api/attendance/**
+          filters:
+            - StripPrefix=1
