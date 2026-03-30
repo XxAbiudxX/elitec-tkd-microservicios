@@ -26,7 +26,7 @@ spring:
       # --- AQUÍ EMPIEZAN LAS RUTAS (Al mismo nivel que globalcors) ---
       routes:
         - id: auth-service
-          uri: https://auth-service-production-XXXX.up.railway.app
+          uri: auth-service-production-8fc3.up.railway.app
           predicates:
             - Path=/api/auth/**
           filters:
