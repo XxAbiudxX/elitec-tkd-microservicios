@@ -23,3 +23,11 @@ spring:
               - "Accept"
               - "Origin"
             allowCredentials: true
+      # --- AQUÍ EMPIEZAN LAS RUTAS (Al mismo nivel que globalcors) ---
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0  # Mantiene el /api/auth para que Java lo reconozca
