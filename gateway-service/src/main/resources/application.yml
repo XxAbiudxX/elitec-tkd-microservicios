@@ -1,37 +1,25 @@
-server:
-  port: 8080
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    # ESTO ES LO QUE FALTA:
-    register-with-eureka: true
-    fetch-registry: true
-
 spring:
-  application:
-    name: gateway-service
   cloud:
     gateway:
       globalcors:
+        # Esto obliga a que el filtro se aplique antes que cualquier otra cosa
+        add-to-simple-url-handler-mapping: true 
         corsConfigurations:
-         '[/**]':
-           allowedOriginPatterns:
-           - "https://elitec-tkd-microservicios.vercel.app"
-           - "http://127.0.0.1:5500"
-           allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-           allowedHeaders: "*"
-           allowCredentials: true
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      routes:
-        - id: auth-service
-          # CAMBIO AQUÍ: Prueba ponerlo en minúsculas si en Eureka sale así, o viceversa
-          uri: auth-service-production-8fc3.up.railway.app
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - StripPrefix=1
+          '[/**]':
+            allowedOrigins: 
+              - "https://elitec-tkd-microservicios.vercel.app"
+              - "http://127.0.0.1:5500"
+              - "http://localhost:5500"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: 
+              - "Content-Type"
+              - "Authorization"
+              - "X-Requested-With"
+              - "Accept"
+              - "Origin"
+            allowCredentials: true
