@@ -3,8 +3,9 @@ server:
 
 eureka:
   client:
+    register-with-eureka: true # <-- Agrégale esto
+    fetch-registry: true      # <-- Y esto también
     serviceUrl:
-      # Usamos la variable de Railway para conectar con la brújula real
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
 
 spring:
