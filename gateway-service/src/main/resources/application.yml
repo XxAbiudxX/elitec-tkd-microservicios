@@ -30,4 +30,4 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=2  # Mantiene el /api/auth para que Java lo reconozca
+            - StripPrefix=0  # Mantiene el /api/auth para que Java lo reconozca
