@@ -28,7 +28,7 @@ spring:
       routes:
         - id: auth-service
           # CAMBIO AQUÍ: Prueba ponerlo en minúsculas si en Eureka sale así, o viceversa
-          uri: lb://auth-service 
+          uri: auth-service-production-8fc3.up.railway.app
           predicates:
             - Path=/api/auth/**
           filters:
