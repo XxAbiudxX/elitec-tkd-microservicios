@@ -17,7 +17,6 @@ import pe.elitec.academia_taekwondo.auth_service.repository.UsuarioRepository;
 import java.util.Optional;
 import java.util.Set;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
