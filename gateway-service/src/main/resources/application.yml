@@ -1,20 +1,21 @@
 spring:
   cloud:
     gateway:
+      # --- ESTO VA AQUÍ (Al mismo nivel que routes y globalcors) ---
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
       globalcors:
-        add-to-simple-url-handler-mapping: true 
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
-            # CAMBIO: Usamos allowedOriginPatterns en lugar de allowedOrigins para evitar conflictos con allowCredentials
-            allowedOriginPatterns: 
+            allowedOriginPatterns:
               - "https://elitec-tkd-microservicios.vercel.app"
               - "http://127.0.0.1:5500"
             allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-            allowedHeaders: "*" # Simplificamos para asegurar que no bloquee nada
+            allowedHeaders: "*"
             allowCredentials: true
       routes:
         - id: auth-service
-          # ERROR DETECTADO: Te falta el "https://" en la uri
           uri: https://auth-service-production-8fc3.up.railway.app
           predicates:
             - Path=/api/auth/**
