@@ -1,0 +1,17 @@
+# Archivos compilados de Java y Maven
+**/target/
+*.jar
+*.war
+
+# Logs
+*.log
+
+# Archivos de Entornos de Desarrollo (IDE)
+.vscode/
+.idea/
+*.iml
+*.eclipse
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

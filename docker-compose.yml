@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # --- SERVICIO 1: EUREKA SERVER ---
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 3: MICROSERVICIO DE ESTUDIANTES ---
+  student-service:
+    build: ./student-service
+    container_name: student-service
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-square-smoke-an4y5cm3-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_cFq1YJSnV2vH
+    depends_on:
+      eureka-server:
+        condition: service_started
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 4: API GATEWAY ---
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_started
+    networks:
+      - taekwondo-net
+
+      # --- SERVICIO NUEVO: SEGURIDAD Y USUARIOS ---
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8084:8084"
+    environment:
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-square-smoke-an4y5cm3-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_cFq1YJSnV2vH
+    depends_on:
+      eureka-server:
+        condition: service_started
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 5: ASISTENCIA ---
+  attendance-service:
+    build: ./attendance-service
+    container_name: attendance-service
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_started
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 6: ENTRENAMIENTOS ---
+  training-service:
+    build: ./training-service
+    container_name: training-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 7: PROMETHEUS ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-server
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - taekwondo-net
+
+  # --- SERVICIO 8: GRAFANA ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-server
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - taekwondo-net
+
+# --- AQUÍ EMPIEZAN LAS REDES ---
+networks:
+  taekwondo-net:
+    driver: bridge
+
+    

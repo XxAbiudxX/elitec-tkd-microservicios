@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 5s # Recolectar datos cada 5 segundos
+  evaluation_interval: 5s
+
+scrape_configs:
+  # --- TAREA 1: VIGILAR AL SERVICIO DE ESTUDIANTES ---
+  - job_name: 'student-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['student-service:8081'] # Nombre del contenedor : Puerto
+
+  # --- TAREA 2: VIGILAR AL SERVICIO DE ASISTENCIA ---
+  - job_name: 'attendance-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['attendance-service:8082']
+
+  # --- TAREA 3: VIGILAR AL GATEWAY ---
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway-service:8080']
+
+      # --- TAREA 4: VIGILAR AL SERVICIO DE ENTRENAMIENTO ---
+  - job_name: 'training-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['training-service:8083']
