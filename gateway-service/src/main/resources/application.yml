@@ -16,11 +16,11 @@ spring:
     gateway:
       globalcors:
         corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns: "*" 
-            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-            allowedHeaders: "*"
-            allowCredentials: true
+         '[/**]':
+           allowedOriginPatterns: "*"
+           allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+           allowedHeaders: "*"
+           allowCredentials: true
       discovery:
         locator:
           enabled: true
