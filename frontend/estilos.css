@@ -1,0 +1,88 @@
+:root {
+    --sidebar-width: 260px;
+    --tkd-red: #dc3545;
+    --tkd-dark: #121212;
+    --tkd-card: #1e1e1e;
+    --tkd-orange: #ff8c00;
+    --text-gray: #b3b3b3;
+}
+
+body {
+    background-color: var(--tkd-dark);
+    color: white;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    background: #000;
+    border-right: 1px solid #333;
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.sidebar-header { padding: 30px 20px; text-align: center; }
+
+.nav-link {
+    color: var(--text-gray);
+    padding: 12px 20px;
+    margin: 4px 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    background: rgba(220, 53, 69, 0.2);
+    color: var(--tkd-red);
+}
+
+.nav-link.active { background: var(--tkd-red); color: white; }
+
+/* --- CONTENIDO --- */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 40px;
+    min-height: 100vh;
+}
+
+.section-content { display: none; animation: fadeIn 0.4s ease; }
+.section-content.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- TARJETAS ESTILO "CURSOS" --- */
+.card-tkd {
+    background: var(--tkd-card);
+    border: 1px solid #333;
+    border-radius: 15px;
+    padding: 20px;
+    transition: 0.3s;
+}
+
+.card-tkd:hover { border-color: var(--tkd-orange); transform: translateY(-5px); }
+
+.btn-tkd {
+    background: var(--tkd-orange);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    width: 100%;
+}
+
+/* --- ADAPTACIÓN MÓVIL --- */
+@media (max-width: 992px) {
+    .sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
+    .main-content { margin-left: 0; padding: 20px; }
+    .sidebar.active { margin-left: 0; }
+}

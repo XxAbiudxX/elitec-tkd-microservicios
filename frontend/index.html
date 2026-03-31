@@ -2,79 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elitec TKD - Dashboard</title>
+    <title>Elitec TKD - Sensei Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        :root { --sidebar-width: 250px; --tkd-red: #dc3545; }
-        body { background-color: #1a1a1a; color: white; } /* Fondo oscuro como en tu foto */
-        
-        /* Sidebar Estilo Profesional */
-        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #212529; border-right: 1px solid #333; }
-        .main-content { margin-left: var(--sidebar-width); padding: 30px; }
-        
-        .nav-link { color: #adb5bd; padding: 12px 20px; border-radius: 8px; margin: 5px 15px; }
-        .nav-link:hover, .nav-link.active { background: var(--tkd-red); color: white; }
-        
-        .card-tkd { background: #2b2b2b; border: 1px solid #3d3d3d; border-radius: 12px; color: white; }
-        .btn-tkd { background: #ff8c00; border: none; color: white; font-weight: bold; } /* Color naranja de tus botones */
-        .content-section { display: none; }
-        .content-section.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
+    <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
 
-    <div class="sidebar d-flex flex-column p-3">
-        <h4 class="text-center fw-bold mb-5"><i class="bi bi-yin-yang text-danger"></i> Elitec TKD</h4>
-        <nav class="nav flex-column">
-            <a class="nav-link active" href="#" onclick="switchTab('inicio', this)"><i class="bi bi-grid-fill"></i> Mi Tablero</a>
-            <a class="nav-link" href="#" onclick="switchTab('alumnos', this)"><i class="bi bi-people-fill"></i> Mis Cursos / Alumnos</a>
-            <a class="nav-link" href="#" onclick="switchTab('sedes', this)"><i class="bi bi-building"></i> Sedes</a>
+    <div class="sidebar d-flex flex-column" id="sidebar">
+        <div class="sidebar-header">
+            <h4 class="fw-bold text-danger"><i class="bi bi-yin-yang"></i> Elitec TKD</h4>
+        </div>
+        <nav class="nav flex-column mt-2">
+            <a class="nav-link active" href="#" onclick="switchTab('inicio', this)"><i class="bi bi-speedometer2"></i> Mi Tablero</a>
+            <a class="nav-link" href="#" onclick="switchTab('alumnos', this)"><i class="bi bi-people"></i> Alumnos</a>
+            <a class="nav-link" href="#" onclick="switchTab('sedes', this)"><i class="bi bi-geo-alt"></i> Sedes</a>
             <a class="nav-link text-warning" href="#" onclick="switchTab('perfil', this)"><i class="bi bi-person-circle"></i> Mi Perfil</a>
         </nav>
-        <div class="mt-auto p-3">
-            <button class="btn btn-outline-light w-100 btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
+        <div class="mt-auto p-4">
+            <button class="btn btn-outline-light w-100 btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </div>
 
+    <button class="btn btn-danger d-lg-none position-fixed top-0 start-0 m-2 z-3" onclick="document.getElementById('sidebar').classList.toggle('active')">
+        <i class="bi bi-list"></i>
+    </button>
+
     <div class="main-content">
         
-        <section id="sec-inicio" class="content-section active">
-            <div class="alert card-tkd p-4">
-                <h4><i class="bi bi-check-circle-fill text-success"></i> Estado del Dojo</h4>
-                <p class="mb-0">Bienvenido Sensei. El sistema está sincronizado.</p>
+        <section id="sec-inicio" class="section-content active">
+            <h2 class="fw-bold mb-4">Mi Tablero</h2>
+            <div class="alert card-tkd border-start border-success border-4">
+                <h5 class="text-success fw-bold"><i class="bi bi-shield-check"></i> Sistema Online</h5>
+                <p class="mb-0 small text-gray">Bienvenido, Sensei. Todos los servicios de Railway están activos.</p>
             </div>
-            </section>
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <div class="card-tkd text-center p-4">
+                        <h1 id="count-alumnos" class="display-4 fw-bold text-primary">0</h1>
+                        <p class="text-muted">Alumnos Activos</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <section id="sec-alumnos" class="content-section">
+        <section id="sec-alumnos" class="section-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="fw-bold">Gestión de Alumnos</h2>
-                <button class="btn btn-tkd" data-bs-toggle="modal" data-bs-target="#modalAlumno">+ Nuevo Alumno</button>
+                <button class="btn btn-tkd w-auto" data-bs-toggle="modal" data-bs-target="#modalAlumno">+ Nueva Matrícula</button>
             </div>
             <div id="students-list" class="row g-4">
                 </div>
         </section>
 
-        <section id="sec-sedes" class="content-section">
-            <h2 class="fw-bold">Sedes Universitarias</h2>
-            <div id="sedes-list" class="row g-4"></div>
+        <section id="sec-sedes" class="section-content">
+            <h2 class="fw-bold mb-4">Sedes / Dojos</h2>
+            <div id="sedes-list" class="row g-4">
+                </div>
         </section>
 
-        <section id="sec-perfil" class="content-section">
-            <div class="card-tkd p-4">
-                <div class="row">
-                    <div class="col-md-2 text-center">
-                        <img src="https://via.placeholder.com/150" class="rounded-circle img-thumbnail" id="perfil-img">
+        <section id="sec-perfil" class="section-content">
+            <div class="card-tkd p-0 overflow-hidden">
+                <div class="bg-danger p-4 d-flex align-items-center gap-4">
+                    <div class="bg-white rounded-circle p-1 shadow">
+                        <img src="https://ui-avatars.com/api/?name=Sensei+TKD&background=random" class="rounded-circle" width="100">
                     </div>
-                    <div class="col-md-10">
-                        <h2 id="p-nombre">Nombre del Sensei</h2>
-                        <span class="badge bg-danger">Ciencias de la Comunicación</span>
+                    <div>
+                        <h2 class="mb-0 fw-bold" id="p-nombre-header">Cargando...</h2>
+                        <span class="badge bg-dark">Grado: Cinturón Negro</span>
                     </div>
                 </div>
-                <hr class="border-secondary">
-                <div class="row mt-4" id="perfil-data">
+                <div class="p-4 row" id="perfil-data-grid">
                     </div>
             </div>
         </section>
