@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <script src="security.js"></script> <title>Elitec TKD - Inicio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+    <div class="sidebar d-flex flex-column" id="sidebar">
+        <div class="sidebar-header">
+            <h4 class="fw-bold text-danger"><i class="bi bi-yin-yang"></i> Elitec TKD</h4>
+        </div>
+        <nav class="nav flex-column mt-2">
+            <a class="nav-link active" href="dashboard.html"><i class="bi bi-speedometer2"></i> Inicio</a>
+            
+            <div id="admin-links">
+                <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
+                <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
+            </div>
+
+            <a class="nav-link" href="horarios.html"><i class="bi bi-calendar3"></i> Mis Horarios</a>
+            <a class="nav-link text-warning" href="perfil.html"><i class="bi bi-person-circle"></i> Mi Perfil</a>
+        </nav>
+        <div class="mt-auto p-4 border-top border-secondary">
+            <button class="btn btn-outline-light w-100 btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h2 class="fw-bold mb-4 text-white">Bienvenido al Dojo</h2>
+        
+        <div class="row g-4">
+            <div class="col-md-8">
+                <div class="alert card-tkd border-start border-success border-4 shadow">
+                    <h5 class="text-success fw-bold"><i class="bi bi-cloud-check"></i> Servicios Online</h5>
+                    <p class="mb-0 small text-light">Todos los microservicios en Railway y la DB en Neon están operativos.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4" id="widget-stats">
+                <div class="card-tkd text-center p-4">
+                    <h1 id="count-alumnos" class="display-4 fw-bold text-orange">--</h1>
+                    <p class="text-muted small text-uppercase">Alumnos Registrados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica específica de esta página
+        const API_BASE_URL = "https://gateway-service-production-2ae6.up.railway.app";
+        const token = localStorage.getItem('jwtToken');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const rol = window.userRole;
+
+            // 1. Ocultar links de admin si no tiene el rol
+            if (rol === 'ROLE_ALUMNO') {
+                document.getElementById('admin-links').style.display = 'none';
+                document.getElementById('widget-stats').style.display = 'none';
+            } else {
+                // 2. Si es Admin, cargar el conteo de alumnos
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/alumnos/count`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const count = await res.json();
+                    document.getElementById('count-alumnos').innerText = count;
+                } catch (e) { console.error("Error al conectar con Student-Service"); }
+            }
+        });
+
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
