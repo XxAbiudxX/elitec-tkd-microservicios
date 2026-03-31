@@ -3,7 +3,6 @@ const token = localStorage.getItem('jwtToken');
 const email = localStorage.getItem('userEmail');
 const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
-// Variable global para almacenar todos tus datos y no perderlos al actualizar
 let usuarioActualCompleto = {}; 
 
 const validarDato = (valor, reemplazo = 'PENDIENTE') => {
@@ -11,10 +10,12 @@ const validarDato = (valor, reemplazo = 'PENDIENTE') => {
     return esInvalido ? `<span class="text-warning opacity-50">${reemplazo}</span>` : valor;
 };
 
+// 🛡️ Extracción Segura: Busca en todos los formatos posibles
 function obtenerRolSeguro() {
     try {
         const payload = JSON.parse(window.atob(token.split('.')[1]));
-        return payload.role || payload.authorities || payload.roles || 'ROLE_ALUMNO';
+        // Añadimos 'payload.rol' para que coincida con JwtProvider.java
+        return payload.rol || payload.role || payload.authorities || payload.roles || 'ROLE_ALUMNO';
     } catch (e) {
         return 'ROLE_ALUMNO';
     }
@@ -28,10 +29,9 @@ async function cargarPerfil() {
         const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { headers });
         
         if (res.ok) {
-            // Guardamos el registro íntegro de la base de datos
             usuarioActualCompleto = await res.json(); 
             
-            // Renderizado seguro
+            // 1. Limpieza de Nombre
             const nombreFinal = (usuarioActualCompleto.nombre && usuarioActualCompleto.nombre !== "null") ? usuarioActualCompleto.nombre : "";
             const apellidoFinal = (usuarioActualCompleto.apellido && usuarioActualCompleto.apellido !== "null") ? usuarioActualCompleto.apellido : "";
             const nombreMostrar = (nombreFinal || apellidoFinal) ? `${nombreFinal} ${apellidoFinal}`.trim() : email.split('@')[0];
@@ -39,10 +39,16 @@ async function cargarPerfil() {
             document.getElementById('p-full-name').innerText = nombreMostrar;
             document.getElementById('p-foto').src = `https://ui-avatars.com/api/?name=${nombreMostrar}&background=random`;
             
-            const rolActual = obtenerRolSeguro();
-            const rolLimpio = rolActual.replace('ROLE_', '').replace('[', '').replace(']', '');
+            // 2. 🛡️ Extracción del Rango: Prioridad a la DB, respaldo en el Token
+            let rolLimpio = 'ALUMNO';
+            if (usuarioActualCompleto.roles && usuarioActualCompleto.roles.length > 0) {
+                rolLimpio = usuarioActualCompleto.roles[0].nombre.replace('ROLE_', '');
+            } else {
+                rolLimpio = obtenerRolSeguro().replace('ROLE_', '').replace('[', '').replace(']', '');
+            }
             document.getElementById('p-badge-rol').innerText = `RANGO: ${rolLimpio}`;
 
+            // 3. Renderizado de Datos
             grid.innerHTML = `
                 <div class="col-md-6 mb-3">
                     <p class="text-muted small mb-0">DOCUMENTO DE IDENTIDAD (DNI)</p>
@@ -79,7 +85,6 @@ async function actualizarDatos() {
         return;
     }
 
-    // MODIFICACIÓN CLAVE: Actualizamos SOLO lo que editaste en la copia del objeto completo
     usuarioActualCompleto.telefono = tel;
     usuarioActualCompleto.direccion = dir;
 
@@ -87,7 +92,7 @@ async function actualizarDatos() {
         const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
             method: 'PUT', 
             headers, 
-            body: JSON.stringify(usuarioActualCompleto) // Mandamos TODA la ficha de vuelta
+            body: JSON.stringify(usuarioActualCompleto) 
         });
         
         if (res.ok) {
@@ -105,20 +110,21 @@ function cerrarSesion() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const currentRole = obtenerRolSeguro();
+    // Obtenemos el rol limpio desde la función segura para inyectar pestañas
+    const currentRole = obtenerRolSeguro().toUpperCase();
     const navAdmin = document.getElementById('nav-admin-extras');
 
     if (navAdmin) {
         if (currentRole.includes('ADMIN')) {
             navAdmin.innerHTML = `
-                <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
-                <a class="nav-link" href="usuarios.html"><i class="bi bi-shield-lock"></i> Usuarios y Roles</a>
-                <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
+                <a class="nav-link text-white" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
+                <a class="nav-link text-white" href="usuarios.html"><i class="bi bi-shield-lock"></i> Usuarios y Roles</a>
+                <a class="nav-link text-white" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
             `;
         } else if (currentRole.includes('PROFESOR')) {
             navAdmin.innerHTML = `
-                <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
-                <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
+                <a class="nav-link text-white" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
+                <a class="nav-link text-white" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
             `;
         }
     }

@@ -43,8 +43,16 @@ public class AuthController {
             Usuario usuario = usuarioOpt.get();
 
             if (passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
-                String rol = usuario.getRoles().iterator().next().getNombre();
-                String token = jwtProvider.generateToken(usuario.getEmail(), rol);
+                // 🛡️ EXTRACCIÓN DE ROL SEGURA
+                String rolNombre = "ALUMNO"; // Rol por defecto en caso de vacío
+                if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
+                    rolNombre = usuario.getRoles().iterator().next().getNombre();
+                }
+
+                // Aseguramos que tenga el prefijo ROLE_ para estandarizar el JWT
+                String rolFinal = rolNombre.startsWith("ROLE_") ? rolNombre : "ROLE_" + rolNombre;
+
+                String token = jwtProvider.generateToken(usuario.getEmail(), rolFinal);
                 return ResponseEntity.ok(new AuthResponse(token));
             }
         }
@@ -94,17 +102,24 @@ public class AuthController {
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
 
-            usuario.setDni(request.getDni());
-            usuario.setTelefono(request.getTelefono());
-            usuario.setDireccion(request.getDireccion());
+            // 🛡️ ESCUDOS ANTI-NULLS: Solo guardamos si el frontend mandó algo válido
+            if (request.getDni() != null && !request.getDni().trim().isEmpty()) {
+                usuario.setDni(request.getDni());
+            }
+            if (request.getTelefono() != null && !request.getTelefono().trim().isEmpty()) {
+                usuario.setTelefono(request.getTelefono());
+            }
+            if (request.getDireccion() != null && !request.getDireccion().trim().isEmpty()) {
+                usuario.setDireccion(request.getDireccion());
+            }
 
-            // CONVERSIÓN DE FECHA
-            if (request.getFechaNacimiento() != null && !request.getFechaNacimiento().isEmpty()) {
+            // CONVERSIÓN DE FECHA SEGURA
+            if (request.getFechaNacimiento() != null && !request.getFechaNacimiento().trim().isEmpty()) {
                 usuario.setFechaNacimiento(LocalDate.parse(request.getFechaNacimiento()));
             }
 
             usuarioRepository.save(usuario);
-            return ResponseEntity.ok("Perfil actualizado con fecha de nacimiento.");
+            return ResponseEntity.ok("Perfil actualizado de forma segura sin borrar datos.");
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
     }

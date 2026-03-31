@@ -15,11 +15,11 @@
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(window.atob(base64));
 
-        // 3. Extraer Rol con soporte multiformato (Spring Security suele enviarlo en 'authorities' o 'role')
-        // Buscamos en orden de prioridad
-        let rol = payload.role || payload.roles || payload.authorities || 'ROLE_ALUMNO';
+        // 3. Extraer Rol (¡AQUÍ ESTABA EL BUG!)
+        // Ahora buscamos 'payload.rol' primero, tal como lo manda tu JwtProvider.java
+        let rol = payload.rol || payload.role || payload.roles || payload.authorities || 'ROLE_ALUMNO';
         
-        // Si el rol viene como un Array (común en JWT), tomamos el primero
+        // Si el rol viene como un Array, tomamos el primero
         if (Array.isArray(rol)) {
             rol = rol[0].authority || rol[0];
         }
