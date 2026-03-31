@@ -1,11 +1,9 @@
 // --- CONFIGURACIÓN DE LA NUBE ---
-// Reemplaza con tu link real del Gateway de Railway
 const API_BASE_URL = "https://gateway-service-production-2ae6.up.railway.app";
 
-// --- VERIFICACIÓN DE SEGURIDAD (LA CERRADURA) ---
+// --- VERIFICACIÓN DE SEGURIDAD ---
 const token = localStorage.getItem('jwtToken');
 if (!token) {
-    // Si no hay pase, lo devolvemos a la puerta de inmediato
     window.location.href = 'login.html'; 
 }
 
@@ -22,33 +20,70 @@ let alumnosCache = [];
 
 function cerrarSesion() { 
     localStorage.removeItem('jwtToken');
+    localStorage.removeItem('userEmail'); // Limpiamos también el email
     window.location.href = 'login.html';
 }
 
 function mostrarSeccion(sec) {
-    // Ocultar paneles
     document.querySelectorAll('.content-panel').forEach(el => el.style.display = 'none');
-    // Mostrar el seleccionado
     const panel = document.getElementById('content-' + sec);
     if(panel) panel.style.display = 'block';
     
-    // Actualizar Navbar visualmente
     document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    // Si el evento existe (clic), marcamos como activo
-    if(event && event.target) event.target.classList.add('active');
+    if(event && event.target && event.target.classList.contains('nav-link')) {
+        event.target.classList.add('active');
+    }
 
-    // Cargar datos según la sección
     if(sec === 'alumnos') cargarAlumnos();
     if(sec === 'sedes') cargarSedes();
 }
 
-// --- MÓDULO ALUMNOS ---
+// --- 👤 MÓDULO PERFIL (NUEVO) ---
+async function guardarPerfil() {
+    // Obtenemos el email que guardamos en el login.js
+    const emailStored = localStorage.getItem('userEmail');
+    
+    if(!emailStored) {
+        alert("Error: No se encontró el email de la sesión. Reintenta loguearte.");
+        return;
+    }
+
+    const datosPerfil = {
+        email: emailStored,
+        dni: document.getElementById('p_dni').value,
+        telefono: document.getElementById('p_telefono').value,
+        direccion: document.getElementById('p_direccion').value,
+        fechaNacimiento: document.getElementById('p_fechaNac').value
+    };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(datosPerfil)
+        });
+
+        if (res.ok) {
+            alert("✅ ¡Ficha de Sensei actualizada con éxito!");
+            // Cerramos el modal usando Bootstrap
+            const modalEl = document.getElementById('modalPerfil');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        } else {
+            const error = await res.text();
+            alert("❌ Error al actualizar: " + error);
+        }
+    } catch (e) {
+        alert("❌ Error de conexión: " + e.message);
+    }
+}
+
+// --- 🥋 MÓDULO ALUMNOS ---
 async function cargarAlumnos() {
     const div = document.getElementById('students-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-primary"></div></div>';
     
     try {
-        // Petición al Gateway en la nube
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
         
         if(res.status === 401) { 
@@ -88,7 +123,7 @@ async function cargarAlumnos() {
     }
 }
 
-// --- MÓDULO SEDES ---
+// --- 🏛️ MÓDULO SEDES ---
 async function cargarSedes() {
     const div = document.getElementById('sedes-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-danger"></div></div>';
@@ -122,5 +157,5 @@ async function cargarSedes() {
 
 // --- CARGA INICIAL ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Sistema Elitec TKD: Conexión establecida.");
+    console.log("Sistema Elitec TKD: Dashboard listo.");
 });

@@ -16,6 +16,7 @@ import pe.elitec.academia_taekwondo.auth_service.repository.UsuarioRepository;
 
 import java.util.Optional;
 import java.util.Set;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -84,5 +85,27 @@ public class AuthController {
         usuarioRepository.save(nuevoUsuario);
 
         return ResponseEntity.ok("Cuenta creada exitosamente en la base de datos.");
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> actualizarPerfil(@RequestBody RegisterRequest request) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getEmail());
+
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+
+            usuario.setDni(request.getDni());
+            usuario.setTelefono(request.getTelefono());
+            usuario.setDireccion(request.getDireccion());
+
+            // CONVERSIÓN DE FECHA
+            if (request.getFechaNacimiento() != null && !request.getFechaNacimiento().isEmpty()) {
+                usuario.setFechaNacimiento(LocalDate.parse(request.getFechaNacimiento()));
+            }
+
+            usuarioRepository.save(usuario);
+            return ResponseEntity.ok("Perfil actualizado con fecha de nacimiento.");
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
     }
 }

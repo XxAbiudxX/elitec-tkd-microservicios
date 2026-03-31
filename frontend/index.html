@@ -25,6 +25,11 @@
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="mostrarSeccion('inicio')">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('alumnos')">🥋 Alumnos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('sedes')">🏛️ Sedes</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil">
+                            <i class="bi bi-person-circle"></i> Mi Perfil
+                        </a>
+                    </li>
                 </ul>
                 <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
             </div>
@@ -34,8 +39,8 @@
     <div class="container mt-4">
         <div id="content-inicio" class="content-panel" style="display: block;">
             <div class="alert alert-light border-start border-success border-5 shadow-sm">
-                <h4 class="alert-heading text-success">✅ Sistema Operativo</h4>
-                <p class="mb-0">Conectado de forma segura mediante Token JWT.</p>
+                <h4 class="alert-heading text-success">✅ Estado del Dojo</h4>
+                <p class="mb-0">¡Bienvenido, Sensei! Sesión activa y segura.</p>
             </div>
             <div class="row text-center mt-4 g-4">
                 <div class="col-md-6">
@@ -73,6 +78,41 @@
                 </button>
             </div>
             <div id="sedes-list" class="row g-4"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPerfil" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-person-vcard"></i> Mi Ficha de Sensei</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPerfil">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">DNI</label>
+                            <input type="text" id="p_dni" class="form-control" placeholder="Ingrese su DNI">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            <input type="text" id="p_telefono" class="form-control" placeholder="Ej: 987654321">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <input type="text" id="p_direccion" class="form-control" placeholder="Av. Ejemplo 123">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de Nacimiento</label>
+                            <input type="date" id="p_fechaNac" class="form-control">
+                        </div>
+                        <hr>
+                        <button type="button" class="btn btn-success w-100 py-2" onclick="guardarPerfil()">
+                            <i class="bi bi-check-circle"></i> Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
