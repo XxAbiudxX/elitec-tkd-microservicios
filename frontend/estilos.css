@@ -80,6 +80,67 @@ body {
     width: 100%;
 }
 
+.btn-tkd:hover {
+    background: #e67e00; /* Naranja un poco más oscuro al pasar el mouse */
+    color: white;
+}
+
+/* =========================================================
+   NUEVO: FORMULARIOS Y MODALES (CORRECCIÓN DE VISIBILIDAD) 
+   ========================================================= */
+
+/* Fondo general de la ventana emergente */
+.modal-content {
+    background-color: var(--tkd-card);
+    border: 1px solid #444;
+}
+
+.modal-header {
+    border-bottom: 1px solid #333;
+}
+
+/* Estilo para los Títulos/Nombres de cada caja (Labels) */
+.modal-body label,
+.card-tkd label {
+    color: #e0e0e0 !important; /* Blanco hueso para que resalte mucho más */
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase; /* Letras mayúsculas para un look más técnico */
+    letter-spacing: 0.5px;
+    display: block; /* Asegura que la etiqueta esté arriba de la caja */
+}
+
+/* Estilo de las Cajas de Texto y Selectores */
+.form-control, 
+.form-select {
+    background-color: var(--tkd-dark) !important; /* Fondo bien oscuro */
+    color: #ffffff !important; /* Letras blancas al escribir */
+    border: 1px solid #555 !important; /* Borde gris claro para delimitar la caja */
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+}
+
+/* Texto de sugerencia (Placeholder) - Ej: "Escribe tu nombre..." */
+.form-control::placeholder {
+    color: #777777 !important; 
+    font-style: italic;
+}
+
+/* Efecto al hacer clic para escribir (Focus) */
+.form-control:focus, 
+.form-select:focus {
+    background-color: #1a1a1a !important;
+    border-color: var(--tkd-orange) !important; /* Borde naranja característico de TKD */
+    box-shadow: 0 0 0 0.25rem rgba(255, 140, 0, 0.25) !important; /* Resplandor naranja */
+    color: white !important;
+}
+
+/* Cerrar Modal Botón */
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
 /* --- ADAPTACIÓN MÓVIL --- */
 @media (max-width: 992px) {
     .sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
