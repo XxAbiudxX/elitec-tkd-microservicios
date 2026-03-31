@@ -59,10 +59,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: El correo ya está registrado.");
         }
 
-        Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setEmail(request.getEmail());
-        nuevoUsuario.setPassword(passwordEncoder.encode(request.getPassword()));
-
         // 2. Buscamos el rol ADMIN en la base de datos
         Optional<Rol> rolAdmin = rolRepository.findByNombre("ADMIN");
         if (rolAdmin.isEmpty()) {
@@ -70,15 +66,14 @@ public class AuthController {
                     .body("Error crítico: El rol ADMIN no existe en la base de datos.");
         }
 
-        // 3. Creamos al nuevo Sensei
+        // 3. Creamos al nuevo Sensei (UN SOLO OBJETO)
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(request.getNombre());
         nuevoUsuario.setApellido(request.getApellido());
         nuevoUsuario.setEmail(request.getEmail());
-        // Si tu entidad Usuario tiene setNombre(), descomenta la siguiente línea:
-        // nuevoUsuario.setNombre(request.getNombre());
+        nuevoUsuario.setEstado(true); // Aseguramos que empiece activo
 
-        // 4. Encriptamos la contraseña (¡Nadie podrá leerla en Neon!)
+        // 4. Encriptamos la contraseña
         String contrasenaEncriptada = passwordEncoder.encode(request.getPassword());
         nuevoUsuario.setPassword(contrasenaEncriptada);
 
