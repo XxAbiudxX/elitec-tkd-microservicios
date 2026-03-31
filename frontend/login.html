@@ -45,20 +45,28 @@
 
                     <div class="tab-pane fade" id="register-pane" role="tabpanel">
                         <form id="formRegistro">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="regNombre" required>
-                                <label>Nombre Completo</label>
-                            </div>
-                            <div class="form-floating mb-3">
-                                <input type="email" class="form-control" id="regEmail" required>
-                                <label>Nuevo Correo</label>
-                            </div>
-                            <div class="form-floating mb-3">
-                                <input type="password" class="form-control" id="regPassword" required>
-                                <label>Crear Contraseña</label>
-                            </div>
-                            <button type="submit" class="btn btn-dark w-100 py-2" id="btnRegister">Registrar Administrador</button>
-                        </form>
+    <div class="form-floating mb-3">
+        <input type="text" class="form-control" id="regNombre" placeholder="Nombre" required>
+        <label>Nombre</label>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <input type="text" class="form-control" id="regApellido" placeholder="Apellido" required>
+        <label>Apellido</label>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input type="email" class="form-control" id="regEmail" placeholder="Correo" required>
+        <label>Nuevo Correo</label>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <input type="password" class="form-control" id="regPassword" placeholder="Contraseña" required>
+        <label>Crear Contraseña</label>
+    </div>
+    
+    <button type="submit" class="btn btn-dark w-100 py-2" id="btnRegister">Registrar Administrador</button>
+</form>
                     </div>
                 </div>
 

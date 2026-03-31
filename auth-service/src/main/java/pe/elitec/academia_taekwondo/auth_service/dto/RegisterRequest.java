@@ -2,6 +2,7 @@ package pe.elitec.academia_taekwondo.auth_service.dto;
 
 public class RegisterRequest {
     private String nombre;
+    private String apellido; // <-- El nuevo campo
     private String email;
     private String password;
     private String rol;
@@ -9,7 +10,8 @@ public class RegisterRequest {
     public RegisterRequest() {
     }
 
-    // Getters y Setters
+    // --- GETTERS Y SETTERS ---
+
     public String getNombre() {
         return nombre;
     }
@@ -17,6 +19,14 @@ public class RegisterRequest {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+    public String getApellido() {
+        return apellido;
+    } // <-- AGREGADO
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    } // <-- AGREGADO
 
     public String getEmail() {
         return email;

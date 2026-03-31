@@ -72,6 +72,8 @@ public class AuthController {
 
         // 3. Creamos al nuevo Sensei
         Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setNombre(request.getNombre());
+        nuevoUsuario.setApellido(request.getApellido());
         nuevoUsuario.setEmail(request.getEmail());
         // Si tu entidad Usuario tiene setNombre(), descomenta la siguiente línea:
         // nuevoUsuario.setNombre(request.getNombre());
