@@ -1,165 +1,179 @@
 // --- CONFIGURACIÓN DE LA NUBE ---
 const API_BASE_URL = "https://gateway-service-production-2ae6.up.railway.app";
-
-// --- VERIFICACIÓN DE SEGURIDAD AL CARGAR ---
 const token = localStorage.getItem('jwtToken');
-if (!token) {
-    window.location.href = 'login.html'; 
+
+if (!token) window.location.href = 'login.html';
+
+// Decodificar el Rol del JWT (Sin librerías externas)
+function getRoleFromToken() {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        return payload.role || payload.roles || 'USER'; 
+    } catch (e) { return 'USER'; }
 }
 
 function getHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
-// --- 🚀 NAVEGACIÓN TIPO "DASHBOARD" ---
-// Esta función reemplaza a mostrarSeccion para manejar el Sidebar
+// --- 🚀 NAVEGACIÓN Y PERMISOS ---
 function switchTab(sectionId, element) {
-    // 1. Ocultar todas las secciones del contenido principal
-    document.querySelectorAll('.content-section').forEach(sec => {
-        sec.classList.remove('active');
-    });
+    const rol = getRoleFromToken();
 
-    // 2. Quitar el estado activo de todos los botones del Sidebar
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-
-    // 3. Mostrar la sección seleccionada y activar su botón
-    const targetSection = document.getElementById('sec-' + sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-        element.classList.add('active');
+    // Bloqueo de seguridad: Si un alumno intenta entrar a sedes o alumnos (URL/Consola)
+    if ((sectionId === 'alumnos' || sectionId === 'sedes') && rol === 'ROLE_ALUMNO') {
+        alert("Acceso restringido: Solo para Instructores o Administradores.");
+        return;
     }
 
-    // 4. Carga inteligente de datos según la pestaña
-    switch(sectionId) {
-        case 'alumnos': cargarAlumnos(); break;
-        case 'sedes': cargarSedes(); break;
-        case 'perfil': cargarDatosPerfil(); break;
-    }
+    document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    
+    document.getElementById('sec-' + sectionId).classList.add('active');
+    element.classList.add('active');
+
+    if(sectionId === 'alumnos') cargarAlumnos();
+    if(sectionId === 'sedes') cargarSedes();
+    if(sectionId === 'perfil') cargarDatosPerfil();
 }
 
-function cerrarSesion() { 
-    localStorage.clear();
-    window.location.href = 'login.html';
-}
-
-// --- 👤 MÓDULO PERFIL ESTILO UNIVERSITARIO ---
+// --- 👤 MI PERFIL (COMPLETAR Y EDITAR) ---
 async function cargarDatosPerfil() {
     const email = localStorage.getItem('userEmail');
-    if (!email) return;
+    const container = document.getElementById('perfil-data-grid');
+    container.innerHTML = '<div class="spinner-border text-light"></div>';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { headers: getHeaders() });
         if (res.ok) {
             const u = await res.json();
+            document.getElementById('p-nombre-header').innerText = `${u.nombre} ${u.apellido}`;
             
-            // Llenar el "Encabezado" del perfil (Foto y Nombre)
-            document.getElementById('p-nombre').innerText = `${u.nombre || 'Sensei'} ${u.apellido || ''}`;
-            
-            // Llenar la cuadrícula de datos (Lado izquierdo de tu captura)
-            const perfilDataContainer = document.getElementById('perfil-data');
-            perfilDataContainer.innerHTML = `
-                <div class="col-md-6 mb-3">
-                    <p class="text-muted small mb-0">DOCUMENTO DE IDENTIDAD</p>
-                    <p class="fw-bold text-white">${u.dni || 'No registrado'}</p>
+            // Renderizado de datos estilo cuadrícula universitaria
+            container.innerHTML = `
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">DOCUMENTO DE IDENTIDAD</label>
+                    <p class="fw-bold mb-0">${u.dni || 'PENDIENTE'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="text-muted small mb-0">CORREO ELECTRÓNICO</p>
-                    <p class="fw-bold text-white">${email}</p>
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">CORREO INSTITUCIONAL</label>
+                    <p class="fw-bold mb-0">${u.email}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="text-muted small mb-0">TELÉFONO / CELULAR</p>
-                    <p class="fw-bold text-white">${u.telefono || 'Pendiente'}</p>
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">CELULAR / CONTACTO</label>
+                    <input type="text" id="edit-p-tel" class="form-control bg-dark text-white border-secondary" value="${u.telefono || ''}" placeholder="Escribe tu celular">
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="text-muted small mb-0">DIRECCIÓN ACTUAL</p>
-                    <p class="fw-bold text-white text-uppercase">${u.direccion || 'No especificada'}</p>
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">DIRECCIÓN DE RESIDENCIA</label>
+                    <input type="text" id="edit-p-dir" class="form-control bg-dark text-white border-secondary" value="${u.direccion || ''}" placeholder="Escribe tu dirección">
+                </div>
+                <div class="col-12 mt-2">
+                    <button class="btn btn-tkd w-auto" onclick="actualizarMiPerfil()">
+                        <i class="bi bi-save"></i> ACTUALIZAR MIS DATOS
+                    </button>
                 </div>
             `;
         }
-    } catch (e) { console.error("Error al cargar perfil universitario:", e); }
+    } catch (e) { container.innerHTML = "Error al cargar perfil."; }
 }
 
-// --- 🥋 MÓDULO ALUMNOS (VISTA DE CURSOS) ---
+async function actualizarMiPerfil() {
+    const datos = {
+        email: localStorage.getItem('userEmail'),
+        telefono: document.getElementById('edit-p-tel').value,
+        direccion: document.getElementById('edit-p-dir').value
+    };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+            method: 'PUT', headers: getHeaders(), body: JSON.stringify(datos)
+        });
+        if (res.ok) alert("✅ ¡Perfil actualizado con éxito!");
+    } catch (e) { alert("Error de conexión"); }
+}
+
+// --- 🥋 GESTIÓN DE ALUMNOS (FILTROS Y CRUD) ---
 let alumnosCache = [];
 
 async function cargarAlumnos() {
     const div = document.getElementById('students-list');
-    div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-warning"></div><p>Cargando lista de alumnos...</p></div>';
+    div.innerHTML = '<div class="spinner-border text-warning"></div>';
     
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
         alumnosCache = await res.json();
-        div.innerHTML = '';
-        
-        if(!Array.isArray(alumnosCache) || alumnosCache.length === 0) {
-            div.innerHTML = '<div class="col-12 text-center mt-5"><h5>No hay alumnos registrados.</h5></div>';
-            return;
-        }
-
-        alumnosCache.forEach((a, index) => {
-            // Estructura de tarjeta imitando la de "Innovación y Tecnología" de tu captura
-            div.innerHTML += `
-                <div class="col-md-4">
-                    <div class="card card-tkd h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge bg-warning text-dark px-3 py-2">PRESENCIAL</span>
-                                <small class="text-muted"><i class="bi bi-clock"></i> Ingreso: ${a.fechaIngreso || '2026-I'}</small>
-                            </div>
-                            <h5 class="fw-bold text-white mb-3 text-uppercase">${a.nombre} ${a.apellido}</h5>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="bi bi-person-circle fs-3 me-2 text-secondary"></i>
-                                <div>
-                                    <p class="small mb-0 text-muted">DNI: ${a.dni}</p>
-                                    <p class="small mb-0 text-white">Cinta: ${a.cintaActual}</p>
-                                </div>
-                            </div>
-                            <button class="btn btn-tkd w-100 mt-2" onclick="verDetalle(${index})">
-                                GESTIONAR ALUMNO <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    } catch (e) { div.innerHTML = `<div class="alert alert-danger">Error de red al conectar con el Dojo.</div>`; }
+        renderizarListaAlumnos(alumnosCache);
+    } catch (e) { div.innerHTML = "Error de red."; }
 }
 
-// --- 🏛️ MÓDULO SEDES ---
+// Lógica de Filtrado Dinámico
+function filtrarAlumnos(busqueda) {
+    const filtrados = alumnosCache.filter(a => 
+        a.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+        a.dni.includes(busqueda) ||
+        a.apellido.toLowerCase().includes(busqueda.toLowerCase())
+    );
+    renderizarListaAlumnos(filtrados);
+}
+
+function renderizarListaAlumnos(lista) {
+    const div = document.getElementById('students-list');
+    const rol = getRoleFromToken();
+    div.innerHTML = '';
+
+    lista.forEach((a, index) => {
+        div.innerHTML += `
+            <div class="col-md-4">
+                <div class="card card-tkd h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-warning text-dark">PRESENCIAL</span>
+                            ${rol === 'ROLE_ADMIN' ? 
+                                `<button class="btn btn-sm text-danger" onclick="eliminarAlumno(${a.idAlumno})"><i class="bi bi-trash"></i></button>` : ''}
+                        </div>
+                        <h5 class="fw-bold text-white mt-2">${a.nombre} ${a.apellido}</h5>
+                        <p class="small text-muted mb-1">DNI: ${a.dni}</p>
+                        <p class="small text-white">Cinta: ${a.cintaActual}</p>
+                        <button class="btn btn-tkd mt-2" onclick="verDetalle(${index})">
+                            GESTIONAR <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+    });
+}
+
+// --- 🏛️ SEDES (SEGURIDAD POR SEDE) ---
 async function cargarSedes() {
     const div = document.getElementById('sedes-list');
-    div.innerHTML = '<div class="spinner-border text-danger"></div>';
     try {
         const res = await fetch(`${API_BASE_URL}/api/sedes`, { headers: getHeaders() });
-        const data = await res.json();
+        const sedes = await res.json();
         div.innerHTML = '';
-        data.forEach(s => {
+        sedes.forEach(s => {
             div.innerHTML += `
-                <div class="col-md-4">
-                    <div class="card card-tkd p-3 border-start border-danger border-4">
-                        <h5 class="fw-bold text-white"><i class="bi bi-geo-alt"></i> ${s.nombre}</h5>
-                        <p class="small text-muted mb-0">Encargado: ${s.encargado}</p>
+                <div class="col-md-6">
+                    <div class="card-tkd p-4 border-start border-danger border-4">
+                        <h4 class="text-white">${s.nombre}</h4>
+                        <p class="text-muted small">📍 Direccion: ${s.direccion}</p>
+                        <button class="btn btn-outline-light btn-sm" onclick="alert('Ver horarios de esta sede')">Ver Horarios</button>
                     </div>
                 </div>`;
         });
     } catch (e) { console.error(e); }
 }
 
-// --- GESTIÓN DE MODALES (EDICIÓN Y REGISTRO) ---
-function verDetalle(index) {
-    const a = alumnosCache[index];
-    document.getElementById('edit_id').value = a.idAlumno;
-    document.getElementById('edit_nombre').value = a.nombre || '';
-    document.getElementById('edit_apellido').value = a.apellido || '';
-    document.getElementById('edit_dni').value = a.dni || '';
-    document.getElementById('edit_cinta').value = a.cintaActual || 'Blanca';
-
-    const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
-    modal.show();
+function cerrarSesion() {
+    localStorage.clear();
+    window.location.href = 'login.html';
 }
 
-// Cargar dashboard inicial al entrar
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Elitec TKD 2.0: Sistema iniciado.");
+    // Al cargar, ocultamos botones del sidebar si es alumno
+    const rol = getRoleFromToken();
+    if (rol === 'ROLE_ALUMNO') {
+        document.querySelector('[onclick*="alumnos"]').style.display = 'none';
+    }
 });
