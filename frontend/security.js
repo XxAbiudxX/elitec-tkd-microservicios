@@ -1,22 +1,51 @@
-// security.js
+// security.js - El guardián del Dojo
 (function() {
     const token = localStorage.getItem('jwtToken');
+    
+    // 1. Bloqueo si no hay token
     if (!token) {
+        console.warn("Acceso denegado: No se encontró token de sesión.");
         window.location.href = 'login.html';
         return;
     }
 
-    // Decodificar el JWT para saber quién es
-    const payload = JSON.parse(window.atob(token.split('.')[1]));
-    const rol = payload.role || payload.authorities || 'ROLE_ALUMNO';
-    
-    // Guardar el rol globalmente para usarlo en la UI
-    window.userRole = rol;
+    try {
+        // 2. Decodificar el JWT
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
 
-    // Lógica de redirección por intentos de acceso no autorizados
-    const path = window.location.pathname;
-    if (rol === 'ROLE_ALUMNO' && (path.includes('alumnos.html') || path.includes('sedes.html'))) {
-        console.warn("⚠️ Intento de acceso no autorizado detectado.");
-        window.location.href = 'dashboard.html';
+        // 3. Extraer Rol con soporte multiformato (Spring Security suele enviarlo en 'authorities' o 'role')
+        // Buscamos en orden de prioridad
+        let rol = payload.role || payload.roles || payload.authorities || 'ROLE_ALUMNO';
+        
+        // Si el rol viene como un Array (común en JWT), tomamos el primero
+        if (Array.isArray(rol)) {
+            rol = rol[0].authority || rol[0];
+        }
+
+        // Guardar globalmente para que app-perfil.js y otros lo usen
+        window.userRole = rol.toString().toUpperCase();
+        console.log("🔐 Seguridad validada. Rol actual:", window.userRole);
+
+        // 4. Lógica de Redirección (Protección de Rutas)
+        const path = window.location.pathname;
+        const esAlumno = window.userRole.includes('ALUMNO');
+
+        // Páginas prohibidas para Alumnos
+        const paginasProtegidas = ['alumnos.html', 'sedes.html', 'usuarios.html'];
+        
+        const intentaEntrarAProtegida = paginasProtegidas.some(pagina => path.includes(pagina));
+
+        if (esAlumno && intentaEntrarAProtegida) {
+            console.error("🚫 Intento de acceso no autorizado a:", path);
+            alert("Acceso restringido: Solo para Instructores o Administradores.");
+            window.location.href = 'dashboard.html';
+        }
+
+    } catch (e) {
+        console.error("Error crítico en validación de seguridad:", e);
+        localStorage.clear();
+        window.location.href = 'login.html';
     }
 })();
