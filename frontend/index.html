@@ -1,157 +1,28 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elitec TKD - Dashboard Administrador</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="estilos.css">
+    <title>Elitec TKD - Redireccionando...</title>
+    <style>
+        body { background: #121212; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #dc3545; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <script>
+        // LÓGICA DE ENRUTAMIENTO INICIAL
+        window.onload = function() {
+            const token = localStorage.getItem('jwtToken');
+            if (token) {
+                // Si ya está logueado, al Tablero
+                window.location.href = 'dashboard.html';
+            } else {
+                // Si no, a identificarse
+                window.location.href = 'login.html';
+            }
+        };
+    </script>
 </head>
 <body>
-
-    <div class="sidebar d-flex flex-column" id="sidebar">
-        <div class="sidebar-header">
-            <h4 class="fw-bold text-danger"><i class="bi bi-yin-yang"></i> Elitec TKD</h4>
-        </div>
-        <nav class="nav flex-column mt-2" id="sidebar-nav">
-            <a class="nav-link active" href="#" onclick="switchTab('inicio', this)"><i class="bi bi-speedometer2"></i> Mi Tablero</a>
-            <a class="nav-link" id="nav-alumnos" href="#" onclick="switchTab('alumnos', this)"><i class="bi bi-people"></i> Alumnos</a>
-            <a class="nav-link" id="nav-profesores" href="#" onclick="switchTab('profesores', this)"><i class="bi bi-person-badge-fill"></i> Profesores</a>
-            <a class="nav-link" id="nav-sedes" href="#" onclick="switchTab('sedes', this)"><i class="bi bi-geo-alt"></i> Sedes</a>
-            <a class="nav-link" href="#" onclick="switchTab('horarios', this)"><i class="bi bi-calendar3"></i> Horarios</a>
-            <a class="nav-link text-warning" href="#" onclick="switchTab('perfil', this)"><i class="bi bi-person-circle"></i> Mi Perfil</a>
-        </nav>
-        <div class="mt-auto p-4 border-top border-secondary">
-            <button class="btn btn-outline-light w-100 btn-sm" onclick="cerrarSesion()">
-                <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
-            </button>
-        </div>
-    </div>
-
-    <button class="btn btn-danger d-lg-none position-fixed top-0 start-0 m-2 z-3" onclick="document.getElementById('sidebar').classList.toggle('active')">
-        <i class="bi bi-list"></i>
-    </button>
-
-    <div class="main-content">
-        
-        <section id="sec-inicio" class="section-content active">
-            <h2 class="fw-bold mb-4 text-white">Mi Tablero</h2>
-            <div class="alert card-tkd border-start border-success border-4 shadow">
-                <h5 class="text-success fw-bold mb-1"><i class="bi bi-shield-check"></i> Sistema Online</h5>
-                <p class="mb-0 small text-light opacity-75">Conectado a los microservicios en Railway.</p>
-            </div>
-            <div class="row g-4 mt-2">
-                <div class="col-md-4">
-                    <div class="card-tkd text-center p-4 shadow-sm">
-                        <h1 id="count-alumnos" class="display-4 fw-bold text-orange">0</h1>
-                        <p class="text-muted mb-0 text-uppercase small">Alumnos en Base de Datos</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="sec-alumnos" class="section-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-white">Gestión de Alumnos</h2>
-                <button class="btn btn-tkd w-auto px-4" data-bs-toggle="modal" data-bs-target="#modalAlumno">
-                    <i class="bi bi-person-plus-fill"></i> + Nueva Matrícula
-                </button>
-            </div>
-            <div class="mb-4">
-                <div class="input-group card-tkd p-1">
-                    <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control bg-transparent border-0 text-white" 
-                           placeholder="Filtrar alumnos por DNI o Nombre..." oninput="filtrarAlumnos(this.value)">
-                </div>
-            </div>
-            <div id="students-list" class="row g-4"></div>
-        </section>
-
-        <section id="sec-profesores" class="section-content">
-            <h2 class="fw-bold mb-4 text-white">Cuerpo Docente</h2>
-            <div id="profesores-list" class="row g-4"></div>
-        </section>
-
-        <section id="sec-sedes" class="section-content">
-            <h2 class="fw-bold mb-4 text-white">Sedes / Dojos</h2>
-            <div id="sedes-list" class="row g-4"></div>
-        </section>
-
-        <section id="sec-horarios" class="section-content">
-            <h2 class="fw-bold mb-4 text-white">Cronograma de Clases</h2>
-            <div id="admin-horario-panel" class="card-tkd p-4 mb-4 border-start border-orange border-4 d-none">
-                <h5 class="text-orange mb-3">Asignar Nueva Clase</h5>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <select id="h-sede" class="form-select bg-secondary border-0 text-white"></select>
-                    </div>
-                    <div class="col-md-3">
-                        <select id="h-dia" class="form-select bg-secondary border-0 text-white">
-                            <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
-                            <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
-                            <option value="Viernes">Viernes</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="time" id="h-hora" class="form-control bg-secondary border-0 text-white">
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-tkd w-100" onclick="crearHorario()">Asignar</button>
-                    </div>
-                </div>
-            </div>
-            <div id="horarios-grid" class="row g-4"></div>
-        </section>
-
-        <section id="sec-perfil" class="section-content">
-            <div class="card-tkd p-0 overflow-hidden shadow-lg">
-                <div class="bg-danger p-4 d-flex align-items-center gap-4">
-                    <div class="bg-white rounded-circle p-1">
-                        <img src="https://ui-avatars.com/api/?name=Sensei+TKD&background=random" class="rounded-circle" width="100" id="perfil-foto">
-                    </div>
-                    <div class="text-white">
-                        <h2 class="mb-0 fw-bold" id="p-nombre-header">Cargando...</h2>
-                        <span class="badge bg-dark mt-1" id="p-rol-tag">ADMINISTRADOR</span>
-                    </div>
-                </div>
-                <div class="p-4 bg-dark">
-                    <div class="row g-4" id="perfil-data-grid"></div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div class="modal fade" id="modalAlumno" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold" id="modalAlumnoTitle">Ficha Técnica del Alumno</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="formAlumno">
-                        <input type="hidden" id="edit_id">
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="small text-muted">Nombre</label><input type="text" id="a_nombre" class="form-control bg-secondary border-0 text-white" required></div>
-                            <div class="col-md-6"><label class="small text-muted">Apellido</label><input type="text" id="a_apellido" class="form-control bg-secondary border-0 text-white" required></div>
-                            <div class="col-md-6"><label class="small text-muted">DNI</label><input type="text" id="a_dni" class="form-control bg-secondary border-0 text-white"></div>
-                            <div class="col-md-6">
-                                <label class="small text-muted">Cinta</label>
-                                <select id="a_cinta" class="form-select bg-secondary border-0 text-white">
-                                    <option value="Blanca">Blanca</option><option value="Roja">Roja</option><option value="Negra">Negra</option>
-                                </select>
-                            </div>
-                            <div class="col-12"><label class="small text-muted">Correo</label><input type="email" id="a_email" class="form-control bg-secondary border-0 text-white"></div>
-                        </div>
-                        <button type="button" class="btn btn-tkd w-100 mt-4 py-3 fw-bold" onclick="guardarAlumno()">SINCRONIZAR DATOS</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js"></script>
+    <div class="loader"></div>
 </body>
 </html>
