@@ -1,40 +1,31 @@
-server:
-  port: 8081
-
 spring:
-  application:
-    name: student-service
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "https://elitec-tkd-microservicios.vercel.app"
+              - "http://127.0.0.1:5500"
+            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # --- RUTA DE AUTENTICACIÓN ---
+        - id: auth-service
+          uri: https://auth-service-production-8fc3.up.railway.app
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
 
-  datasource:
-    # URL de Neon con pooler para mejor rendimiento en microservicios
-    url: jdbc:postgresql://ep-square-smoke-an4y5cm3-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_cFq1YJSnV2vH
-    driver-class-name: org.postgresql.Driver
-    
-    # --- CONFIGURACIÓN DE POOL (RECOMENDADO PARA NEON) ---
-    hikari:
-      maximum-pool-size: 5
-      minimum-idle: 1
-      idle-timeout: 30000
-      connection-timeout: 20000
-
-  jpa:
-    hibernate:
-      # 'update' crea las tablas automáticamente si no existen en Neon
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        # Asegura que campos como 'cintaActual' se conviertan en 'cinta_actual' en Postgres
-        format_sql: true
-    
-  # --- CONFIGURACIÓN PARA RECIBIR JSON CORRECTAMENTE ---
-  jackson:
-    date-format: yyyy-MM-dd
-    serialization:
-      write-dates-as-timestamps: false
-
-# --- CONFIGURACIÓN DE SEGURIDAD (OPCIONAL SI USAS JWT) ---
-# Si tu servicio de alumnos va a validar el Token, aquí iría la clave secreta.
+        # --- NUEVA RUTA DE ALUMNOS (AQUÍ ESTABA EL ERROR) ---
+        - id: student-service
+          uri: pure-upliftment-production-1b1f.up.railway.app
+          predicates:
+            - Path=/api/alumnos/**
+          filters:
+            - StripPrefix=0

@@ -74,6 +74,10 @@ async function cargarDatosPerfil() {
                 btnEdit.innerHTML = '<i class="bi bi-check-all"></i> Ficha Completa (Validada)';
                 btnEdit.className = 'btn btn-success w-100 py-2';
                 btnEdit.disabled = true;
+            } else {
+                btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Completar / Editar Datos';
+                btnEdit.className = 'btn btn-primary w-100 py-2';
+                btnEdit.disabled = false;
             }
         }
     } catch (e) {
@@ -115,15 +119,29 @@ async function guardarPerfil() {
 async function cargarAlumnos() {
     const div = document.getElementById('students-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-primary"></div></div>';
+    
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
-        if(res.status === 401) { cerrarSesion(); return; }
+        
+        // Si el Gateway responde 404 o el servicio está caído
+        if(!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            div.innerHTML = `<div class="alert alert-danger w-100">Error ${res.status}: El servicio de alumnos no responde correctamente.</div>`;
+            return;
+        }
         
         const alumnos = await res.json();
+        
+        // Validación CRÍTICA: Verificamos que sea una lista antes de usar forEach
+        if(!Array.isArray(alumnos)) {
+            div.innerHTML = '<div class="alert alert-warning w-100">Error: El formato de datos recibido es incorrecto.</div>';
+            return;
+        }
+
         div.innerHTML = '';
         
         if(alumnos.length === 0) {
-            div.innerHTML = '<div class="alert alert-warning w-100">No hay alumnos registrados.</div>';
+            div.innerHTML = '<div class="alert alert-warning w-100">No hay alumnos registrados en el Dojo todavía.</div>';
             return;
         }
 
@@ -140,7 +158,9 @@ async function cargarAlumnos() {
                     </div>
                 </div>`;
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        div.innerHTML = `<div class="alert alert-danger w-100">Error de conexión: No se pudo alcanzar el servidor de alumnos.</div>`;
+    }
 }
 
 async function guardarAlumno() {
@@ -169,16 +189,17 @@ async function guardarAlumno() {
 
         if (res.ok) {
             alert("🥋 ¡Alumno registrado con éxito!");
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAlumno'));
+            const modalEl = document.getElementById('modalAlumno');
+            const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
             document.getElementById('formAlumno').reset();
             cargarAlumnos();
         } else {
             const txt = await res.text();
-            alert("❌ Error: " + txt);
+            alert("❌ Error al registrar: " + (txt || "Verifica los datos (DNI único)"));
         }
     } catch (e) {
-        alert("❌ Error de conexión con el servicio de alumnos.");
+        alert("❌ Error de red: No hay conexión con el Student-Service.");
     } finally {
         btn.disabled = false;
         btn.innerHTML = 'Registrar Alumno';
@@ -191,6 +212,7 @@ async function cargarSedes() {
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-danger"></div></div>';
     try {
         const res = await fetch(`${API_BASE_URL}/api/sedes`, { headers: getHeaders() });
+        if(!res.ok) throw new Error("Error en sedes");
         const data = await res.json();
         div.innerHTML = '';
         data.forEach(s => {
@@ -205,7 +227,9 @@ async function cargarSedes() {
                     </div>
                 </div>`;
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        div.innerHTML = '<div class="alert alert-danger w-100">Error al cargar Sedes.</div>';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
