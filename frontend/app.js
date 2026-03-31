@@ -148,6 +148,49 @@ async function cargarAlumnos() {
     } catch (e) { console.error(e); }
 }
 
+async function cargarDatosPerfil() {
+    const email = localStorage.getItem('userEmail');
+    if (!email) return;
+
+    // Ponemos cargando mientras llega la respuesta
+    document.querySelectorAll('.dato-valor').forEach(el => el.innerText = 'Buscando...');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { 
+            headers: getHeaders() 
+        });
+
+        if (res.ok) {
+            const u = await res.json();
+            
+            // 1. Llenamos la Vista (Lo que ves en el modal)
+            document.getElementById('v_dni').innerText = u.dni || 'Pendiente';
+            document.getElementById('v_telefono').innerText = u.telefono || 'Pendiente';
+            document.getElementById('v_direccion').innerText = u.direccion || 'Pendiente';
+            document.getElementById('v_fechaNac').innerText = u.fechaNacimiento || 'Pendiente';
+
+            // 2. Llenamos los inputs (por si decides editar)
+            document.getElementById('p_dni').value = u.dni || '';
+            document.getElementById('p_telefono').value = u.telefono || '';
+            document.getElementById('p_direccion').value = u.direccion || '';
+            document.getElementById('p_fechaNac').value = u.fechaNacimiento || '';
+
+            // 3. LÓGICA DE BLOQUEO
+            const estaCompleto = u.dni && u.telefono && u.direccion && u.fechaNacimiento;
+            const btnEdit = document.getElementById('btn-editar-perfil');
+            
+            if (estaCompleto) {
+                btnEdit.innerHTML = '<i class="bi bi-check-all"></i> Ficha Completa (Validada)';
+                btnEdit.className = 'btn btn-success w-100 py-2';
+                btnEdit.disabled = true;
+            }
+        }
+    } catch (e) {
+        console.error("Error al cargar perfil:", e);
+        alert("No se pudo conectar con el servidor para leer tus datos.");
+    }
+}
+
 // --- 🏛️ MÓDULO SEDES (Igual que antes) ---
 async function cargarSedes() {
     const div = document.getElementById('sedes-list');

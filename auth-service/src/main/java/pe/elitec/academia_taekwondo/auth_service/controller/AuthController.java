@@ -108,4 +108,15 @@ public class AuthController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
     }
+
+    // --- OBTENER DATOS PARA "MI PERFIL" ---
+    @GetMapping("/me")
+    public ResponseEntity<?> obtenerMiPerfil(@RequestParam String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(usuario -> {
+                    // Creamos un objeto simple con los datos
+                    return ResponseEntity.ok(usuario);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
