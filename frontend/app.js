@@ -35,53 +35,45 @@ function mostrarSeccion(sec) {
     if(sec === 'sedes') cargarSedes();
 }
 
-// --- 👤 MÓDULO PERFIL INTELIGENTE ---
+// --- 👤 MÓDULO PERFIL INTELIGENTE (SENSEI) ---
 
-// 1. Intercambio entre Vista y Formulario
 function toggleEdicion(editando) {
     document.getElementById('perfil-vista').style.display = editando ? 'none' : 'block';
     document.getElementById('perfil-editor').style.display = editando ? 'block' : 'none';
 }
 
-// 2. Cargar datos desde Neon al abrir el Modal
 async function cargarDatosPerfil() {
     const email = localStorage.getItem('userEmail');
-    if (!email) {
-        alert("Sesión no encontrada.");
-        return;
-    }
+    if (!email) return;
+
+    document.querySelectorAll('.dato-valor').forEach(el => el.innerText = 'Buscando...');
 
     try {
-        // Hacemos un GET para traer los datos actuales (Asegúrate de crear este endpoint en el backend)
         const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { headers: getHeaders() });
-        
+
         if (res.ok) {
             const u = await res.json();
             
-            // Llenar la Vista (texto)
+            // Llenar Vista
             document.getElementById('v_dni').innerText = u.dni || 'Pendiente';
             document.getElementById('v_telefono').innerText = u.telefono || 'Pendiente';
             document.getElementById('v_direccion').innerText = u.direccion || 'Pendiente';
             document.getElementById('v_fechaNac').innerText = u.fechaNacimiento || 'Pendiente';
 
-            // Llenar el Editor (inputs)
+            // Llenar Editor
             document.getElementById('p_dni').value = u.dni || '';
             document.getElementById('p_telefono').value = u.telefono || '';
             document.getElementById('p_direccion').value = u.direccion || '';
             document.getElementById('p_fechaNac').value = u.fechaNacimiento || '';
 
-            // BLOQUEO: Si todo está completo, deshabilitamos la edición
+            // Lógica de Bloqueo
             const estaCompleto = u.dni && u.telefono && u.direccion && u.fechaNacimiento;
             const btnEdit = document.getElementById('btn-editar-perfil');
             
             if (estaCompleto) {
                 btnEdit.innerHTML = '<i class="bi bi-check-all"></i> Ficha Completa (Validada)';
                 btnEdit.className = 'btn btn-success w-100 py-2';
-                btnEdit.disabled = true; // El Sensei ya tiene su ficha lista
-            } else {
-                btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Completar / Editar Datos';
-                btnEdit.className = 'btn btn-primary w-100 py-2';
-                btnEdit.disabled = false;
+                btnEdit.disabled = true;
             }
         }
     } catch (e) {
@@ -89,7 +81,6 @@ async function cargarDatosPerfil() {
     }
 }
 
-// 3. Guardar cambios y volver a vista
 async function guardarPerfil() {
     const emailStored = localStorage.getItem('userEmail');
     const datosPerfil = {
@@ -108,31 +99,35 @@ async function guardarPerfil() {
         });
 
         if (res.ok) {
-            alert("✅ ¡Datos actualizados!");
-            toggleEdicion(false); // Volver a la vista
-            cargarDatosPerfil();  // Refrescar los textos y verificar si se bloquea
+            alert("✅ ¡Datos de Sensei actualizados!");
+            toggleEdicion(false);
+            cargarDatosPerfil();
         } else {
-            alert("❌ Error al guardar.");
+            alert("❌ Error al guardar perfil.");
         }
     } catch (e) {
         alert("❌ Error de red: " + e.message);
     }
 }
 
-// --- 🥋 MÓDULO ALUMNOS (Igual que antes) ---
+// --- 🥋 MÓDULO ALUMNOS ---
+
 async function cargarAlumnos() {
     const div = document.getElementById('students-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-primary"></div></div>';
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
         if(res.status === 401) { cerrarSesion(); return; }
-        const alumnosCache = await res.json();
+        
+        const alumnos = await res.json();
         div.innerHTML = '';
-        if(alumnosCache.length === 0) {
+        
+        if(alumnos.length === 0) {
             div.innerHTML = '<div class="alert alert-warning w-100">No hay alumnos registrados.</div>';
             return;
         }
-        alumnosCache.forEach((a) => {
+
+        alumnos.forEach((a) => {
             div.innerHTML += `
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-start border-primary border-4 card-hover">
@@ -148,50 +143,49 @@ async function cargarAlumnos() {
     } catch (e) { console.error(e); }
 }
 
-async function cargarDatosPerfil() {
-    const email = localStorage.getItem('userEmail');
-    if (!email) return;
+async function guardarAlumno() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = 'Registrando...';
 
-    // Ponemos cargando mientras llega la respuesta
-    document.querySelectorAll('.dato-valor').forEach(el => el.innerText = 'Buscando...');
+    const nuevoAlumno = {
+        nombre: document.getElementById('a_nombre').value,
+        apellido: document.getElementById('a_apellido').value,
+        dni: document.getElementById('a_dni').value,
+        telefono: document.getElementById('a_telefono').value,
+        correo: document.getElementById('a_email').value,
+        direccion: document.getElementById('a_direccion').value,
+        cintaActual: document.getElementById('a_cinta').value,
+        fechaNacimiento: document.getElementById('a_fechaNac').value,
+        fechaIngreso: document.getElementById('a_fechaIngreso').value
+    };
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { 
-            headers: getHeaders() 
+        const res = await fetch(`${API_BASE_URL}/api/alumnos`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(nuevoAlumno)
         });
 
         if (res.ok) {
-            const u = await res.json();
-            
-            // 1. Llenamos la Vista (Lo que ves en el modal)
-            document.getElementById('v_dni').innerText = u.dni || 'Pendiente';
-            document.getElementById('v_telefono').innerText = u.telefono || 'Pendiente';
-            document.getElementById('v_direccion').innerText = u.direccion || 'Pendiente';
-            document.getElementById('v_fechaNac').innerText = u.fechaNacimiento || 'Pendiente';
-
-            // 2. Llenamos los inputs (por si decides editar)
-            document.getElementById('p_dni').value = u.dni || '';
-            document.getElementById('p_telefono').value = u.telefono || '';
-            document.getElementById('p_direccion').value = u.direccion || '';
-            document.getElementById('p_fechaNac').value = u.fechaNacimiento || '';
-
-            // 3. LÓGICA DE BLOQUEO
-            const estaCompleto = u.dni && u.telefono && u.direccion && u.fechaNacimiento;
-            const btnEdit = document.getElementById('btn-editar-perfil');
-            
-            if (estaCompleto) {
-                btnEdit.innerHTML = '<i class="bi bi-check-all"></i> Ficha Completa (Validada)';
-                btnEdit.className = 'btn btn-success w-100 py-2';
-                btnEdit.disabled = true;
-            }
+            alert("🥋 ¡Alumno registrado con éxito!");
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAlumno'));
+            modal.hide();
+            document.getElementById('formAlumno').reset();
+            cargarAlumnos();
+        } else {
+            const txt = await res.text();
+            alert("❌ Error: " + txt);
         }
     } catch (e) {
-        console.error("Error al cargar perfil:", e);
-        alert("No se pudo conectar con el servidor para leer tus datos.");
+        alert("❌ Error de conexión con el servicio de alumnos.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Registrar Alumno';
     }
 }
 
-// --- 🏛️ MÓDULO SEDES (Igual que antes) ---
+// --- 🏛️ MÓDULO SEDES ---
 async function cargarSedes() {
     const div = document.getElementById('sedes-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-danger"></div></div>';
