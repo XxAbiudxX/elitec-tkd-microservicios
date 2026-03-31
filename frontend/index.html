@@ -10,6 +10,10 @@
         body { background-color: #f8f9fa; }
         .content-panel { display: none; }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
+        /* Estilo para los datos en modo vista */
+        .dato-perfil { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
+        .dato-label { font-weight: bold; color: #666; }
+        .dato-valor { color: #333; }
     </style>
 </head>
 <body>
@@ -26,7 +30,7 @@
                     <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('alumnos')">🥋 Alumnos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('sedes')">🏛️ Sedes</a></li>
                     <li class="nav-item">
-                        <a class="nav-link text-warning fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil">
+                        <a class="nav-link text-warning fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil" onclick="cargarDatosPerfil()">
                             <i class="bi bi-person-circle"></i> Mi Perfil
                         </a>
                     </li>
@@ -89,7 +93,22 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formPerfil">
+                    
+                    <div id="perfil-vista">
+                        <div class="dato-perfil"><span class="dato-label">DNI:</span> <span id="v_dni" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">Teléfono:</span> <span id="v_telefono" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">Dirección:</span> <span id="v_direccion" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">F. Nacimiento:</span> <span id="v_fechaNac" class="dato-valor">Cargando...</span></div>
+                        
+                        <div class="mt-4">
+                            <button id="btn-editar-perfil" class="btn btn-primary w-100 py-2" onclick="toggleEdicion(true)">
+                                <i class="bi bi-pencil-square"></i> Completar / Editar Datos
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="perfil-editor" style="display: none;">
+                        <div class="alert alert-info py-2 small">Solo se mostrarán los campos para actualizar.</div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">DNI</label>
                             <input type="text" id="p_dni" class="form-control" placeholder="Ingrese su DNI">
@@ -106,11 +125,12 @@
                             <label class="form-label fw-bold">Fecha de Nacimiento</label>
                             <input type="date" id="p_fechaNac" class="form-control">
                         </div>
-                        <hr>
-                        <button type="button" class="btn btn-success w-100 py-2" onclick="guardarPerfil()">
-                            <i class="bi bi-check-circle"></i> Guardar Cambios
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary w-50" onclick="toggleEdicion(false)">Cancelar</button>
+                            <button type="button" class="btn btn-success w-50" onclick="guardarPerfil()">Guardar Cambios</button>
+                        </div>
                     </form>
+
                 </div>
             </div>
         </div>

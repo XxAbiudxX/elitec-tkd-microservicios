@@ -1,29 +1,33 @@
 // --- CONFIGURACIÓN DE LA NUBE ---
-// Reemplazamos localhost por tu nuevo link de Railway
 const API_BASE_URL = "https://gateway-service-production-2ae6.up.railway.app";
 
 // --- INICIAR SESIÓN ---
 document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnLogin');
+    const emailInput = document.getElementById('loginEmail').value; // Capturamos el email
+    
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Conectando...';
     btn.disabled = true;
 
     try {
-        // Usamos la variable de la nube + la ruta de tu API
         const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: document.getElementById('loginEmail').value,
+                email: emailInput,
                 password: document.getElementById('loginPassword').value
             })
         });
 
         if (res.ok) {
             const data = await res.json();
-            localStorage.setItem('jwtToken', data.token); // Guardamos el Pase VIP
-            window.location.href = 'index.html'; // Redirigimos al Dashboard
+            
+            // --- 🥋 LA LLAVE MAESTRA ---
+            localStorage.setItem('jwtToken', data.token); 
+            localStorage.setItem('userEmail', emailInput); // Guardamos el email para el Dashboard
+            
+            window.location.href = 'index.html'; 
         } else {
             document.getElementById('loginError').style.display = 'block';
         }
@@ -43,10 +47,9 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creando...';
     btn.disabled = true;
 
-    // CAPTURA DE DATOS CORREGIDA
     const nuevoUsuario = {
         nombre: document.getElementById('regNombre').value,
-        apellido: document.getElementById('regApellido').value, // <-- Se agregó apellido
+        apellido: document.getElementById('regApellido').value,
         email: document.getElementById('regEmail').value,
         password: document.getElementById('regPassword').value,
         rol: "ADMIN"

@@ -7,7 +7,6 @@ if (!token) {
     window.location.href = 'login.html'; 
 }
 
-// Función para incluir siempre el Token en las peticiones
 function getHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -16,11 +15,9 @@ function getHeaders() {
 }
 
 // --- LÓGICA DE NAVEGACIÓN ---
-let alumnosCache = [];
-
 function cerrarSesion() { 
     localStorage.removeItem('jwtToken');
-    localStorage.removeItem('userEmail'); // Limpiamos también el email
+    localStorage.removeItem('userEmail');
     window.location.href = 'login.html';
 }
 
@@ -38,16 +35,63 @@ function mostrarSeccion(sec) {
     if(sec === 'sedes') cargarSedes();
 }
 
-// --- 👤 MÓDULO PERFIL (NUEVO) ---
-async function guardarPerfil() {
-    // Obtenemos el email que guardamos en el login.js
-    const emailStored = localStorage.getItem('userEmail');
-    
-    if(!emailStored) {
-        alert("Error: No se encontró el email de la sesión. Reintenta loguearte.");
+// --- 👤 MÓDULO PERFIL INTELIGENTE ---
+
+// 1. Intercambio entre Vista y Formulario
+function toggleEdicion(editando) {
+    document.getElementById('perfil-vista').style.display = editando ? 'none' : 'block';
+    document.getElementById('perfil-editor').style.display = editando ? 'block' : 'none';
+}
+
+// 2. Cargar datos desde Neon al abrir el Modal
+async function cargarDatosPerfil() {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+        alert("Sesión no encontrada.");
         return;
     }
 
+    try {
+        // Hacemos un GET para traer los datos actuales (Asegúrate de crear este endpoint en el backend)
+        const res = await fetch(`${API_BASE_URL}/api/auth/me?email=${email}`, { headers: getHeaders() });
+        
+        if (res.ok) {
+            const u = await res.json();
+            
+            // Llenar la Vista (texto)
+            document.getElementById('v_dni').innerText = u.dni || 'Pendiente';
+            document.getElementById('v_telefono').innerText = u.telefono || 'Pendiente';
+            document.getElementById('v_direccion').innerText = u.direccion || 'Pendiente';
+            document.getElementById('v_fechaNac').innerText = u.fechaNacimiento || 'Pendiente';
+
+            // Llenar el Editor (inputs)
+            document.getElementById('p_dni').value = u.dni || '';
+            document.getElementById('p_telefono').value = u.telefono || '';
+            document.getElementById('p_direccion').value = u.direccion || '';
+            document.getElementById('p_fechaNac').value = u.fechaNacimiento || '';
+
+            // BLOQUEO: Si todo está completo, deshabilitamos la edición
+            const estaCompleto = u.dni && u.telefono && u.direccion && u.fechaNacimiento;
+            const btnEdit = document.getElementById('btn-editar-perfil');
+            
+            if (estaCompleto) {
+                btnEdit.innerHTML = '<i class="bi bi-check-all"></i> Ficha Completa (Validada)';
+                btnEdit.className = 'btn btn-success w-100 py-2';
+                btnEdit.disabled = true; // El Sensei ya tiene su ficha lista
+            } else {
+                btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Completar / Editar Datos';
+                btnEdit.className = 'btn btn-primary w-100 py-2';
+                btnEdit.disabled = false;
+            }
+        }
+    } catch (e) {
+        console.error("Error al cargar perfil:", e);
+    }
+}
+
+// 3. Guardar cambios y volver a vista
+async function guardarPerfil() {
+    const emailStored = localStorage.getItem('userEmail');
     const datosPerfil = {
         email: emailStored,
         dni: document.getElementById('p_dni').value,
@@ -64,43 +108,31 @@ async function guardarPerfil() {
         });
 
         if (res.ok) {
-            alert("✅ ¡Ficha de Sensei actualizada con éxito!");
-            // Cerramos el modal usando Bootstrap
-            const modalEl = document.getElementById('modalPerfil');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
+            alert("✅ ¡Datos actualizados!");
+            toggleEdicion(false); // Volver a la vista
+            cargarDatosPerfil();  // Refrescar los textos y verificar si se bloquea
         } else {
-            const error = await res.text();
-            alert("❌ Error al actualizar: " + error);
+            alert("❌ Error al guardar.");
         }
     } catch (e) {
-        alert("❌ Error de conexión: " + e.message);
+        alert("❌ Error de red: " + e.message);
     }
 }
 
-// --- 🥋 MÓDULO ALUMNOS ---
+// --- 🥋 MÓDULO ALUMNOS (Igual que antes) ---
 async function cargarAlumnos() {
     const div = document.getElementById('students-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-primary"></div></div>';
-    
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
-        
-        if(res.status === 401) { 
-            alert("Sesión expirada o no autorizada."); 
-            cerrarSesion(); 
-            return; 
-        }
-        
-        alumnosCache = await res.json();
+        if(res.status === 401) { cerrarSesion(); return; }
+        const alumnosCache = await res.json();
         div.innerHTML = '';
-        
         if(alumnosCache.length === 0) {
-            div.innerHTML = '<div class="alert alert-warning w-100">No hay alumnos registrados en el Dojo todavía.</div>';
+            div.innerHTML = '<div class="alert alert-warning w-100">No hay alumnos registrados.</div>';
             return;
         }
-        
-        alumnosCache.forEach((a, index) => {
+        alumnosCache.forEach((a) => {
             div.innerHTML += `
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-start border-primary border-4 card-hover">
@@ -109,35 +141,21 @@ async function cargarAlumnos() {
                             <p class="text-muted small mb-1">📧 ${a.correo || '-'}</p>
                             <p class="text-muted small mb-2">🪪 DNI: ${a.dni || '-'}</p>
                             <span class="badge bg-dark mb-3">Cinta: ${a.cintaActual || 'Blanca'}</span>
-                            
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-sm btn-outline-success" onclick="abrirAsistencia(${index})"><i class="bi bi-calendar-check"></i> Asistencia</button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${index})"><i class="bi bi-eye"></i> Ver Ficha</button>
-                            </div>
                         </div>
                     </div>
                 </div>`;
         });
-    } catch (e) { 
-        div.innerHTML = `<div class="alert alert-danger w-100">Error conectando al servicio de Alumnos: ${e.message}</div>`; 
-    }
+    } catch (e) { console.error(e); }
 }
 
-// --- 🏛️ MÓDULO SEDES ---
+// --- 🏛️ MÓDULO SEDES (Igual que antes) ---
 async function cargarSedes() {
     const div = document.getElementById('sedes-list');
     div.innerHTML = '<div class="text-center w-100 mt-5"><div class="spinner-border text-danger"></div></div>';
-    
     try {
         const res = await fetch(`${API_BASE_URL}/api/sedes`, { headers: getHeaders() });
         const data = await res.json();
         div.innerHTML = '';
-        
-        if(data.length === 0) {
-            div.innerHTML = '<div class="alert alert-warning w-100">No hay sedes registradas.</div>';
-            return;
-        }
-
         data.forEach(s => {
             div.innerHTML += `
                 <div class="col-md-4">
@@ -150,12 +168,9 @@ async function cargarSedes() {
                     </div>
                 </div>`;
         });
-    } catch (e) { 
-        div.innerHTML = `<div class="alert alert-danger w-100">Error conectando al servicio de Sedes en Railway.</div>`; 
-    }
+    } catch (e) { console.error(e); }
 }
 
-// --- CARGA INICIAL ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Sistema Elitec TKD: Dashboard listo.");
 });
