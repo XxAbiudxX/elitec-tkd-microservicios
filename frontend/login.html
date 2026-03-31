@@ -3,186 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elitec TKD - Panel de Control</title>
+    <title>Sistema Taekwondo - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --tkd-red: #dc3545; --tkd-dark: #212529; }
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar { border-bottom: 3px solid rgba(0,0,0,0.1); }
-        .content-panel { display: none; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card-hover { cursor: pointer; transition: all 0.3s ease; border: none; }
-        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-        .badge-cinta { font-size: 0.85rem; padding: 0.5em 1em; }
-        .nav-tabs .nav-link { color: #666; font-weight: 500; }
-        .nav-tabs .nav-link.active { color: var(--tkd-red); border-bottom: 3px solid var(--tkd-red); }
+        body { background-color: #f8f9fa; }
+        .content-panel { display: none; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
+        /* Estilo para los datos en modo vista */
+        .dato-perfil { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
+        .dato-label { font-weight: bold; color: #666; }
+        .dato-valor { color: #333; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#" onclick="mostrarSeccion('inicio')">
-                <i class="bi bi-yin-yang"></i> ELITEC TKD
-            </a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-yin-yang"></i> Elitec TKD</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link active" href="#" onclick="mostrarSeccion('inicio')">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('alumnos')"><i class="bi bi-people"></i> Alumnos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('sedes')"><i class="bi bi-building"></i> Sedes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('alumnos')">🥋 Alumnos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('sedes')">🏛️ Sedes</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil" onclick="cargarDatosPerfil()">
+                            <i class="bi bi-person-circle"></i> Mi Perfil
+                        </a>
+                    </li>
                 </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <a class="text-white text-decoration-none small fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil" onclick="cargarDatosPerfil()">
-                        <i class="bi bi-person-circle"></i> Mi Perfil
-                    </a>
-                    <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
-                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        
+    <div class="container mt-4">
         <div id="content-inicio" class="content-panel" style="display: block;">
-            <div class="row g-4">
-                <div class="col-md-12">
-                    <div class="p-4 bg-white shadow-sm rounded-4 border-start border-danger border-5">
-                        <h3 class="fw-bold">¡Hola, Sensei! 🥋</h3>
-                        <p class="text-muted">Gestión de la Academia Taekwondo ITF / WT.</p>
+            <div class="alert alert-light border-start border-success border-5 shadow-sm">
+                <h4 class="alert-heading text-success">✅ Estado del Dojo</h4>
+                <p class="mb-0">¡Bienvenido, Sensei! Sesión activa y segura.</p>
+            </div>
+            <div class="row text-center mt-4 g-4">
+                <div class="col-md-6">
+                    <div class="card p-5 h-100 shadow-sm card-hover border-primary" onclick="mostrarSeccion('alumnos')" style="cursor: pointer;">
+                        <h1 class="text-primary"><i class="bi bi-people-fill"></i></h1>
+                        <h3>Gestión de Alumnos</h3>
+                        <p class="text-muted">Fichas completas, Asistencias e Historial</p>
                     </div>
                 </div>
-                <div class="col-md-6" onclick="mostrarSeccion('alumnos')">
-                    <div class="card h-100 p-4 shadow-sm card-hover text-center">
-                        <div class="display-4 text-primary mb-3"><i class="bi bi-person-video3"></i></div>
-                        <h4>Gestión de Alumnos</h4>
-                        <p class="text-muted">Matrículas, asistencias y grados.</p>
-                    </div>
-                </div>
-                <div class="col-md-6" onclick="mostrarSeccion('sedes')">
-                    <div class="card h-100 p-4 shadow-sm card-hover text-center text-danger border-danger">
-                        <div class="display-4 mb-3"><i class="bi bi-geo-alt-fill"></i></div>
-                        <h4>Sedes</h4>
-                        <p class="text-muted">Control de dojos y encargados.</p>
+                <div class="col-md-6">
+                    <div class="card p-5 h-100 shadow-sm card-hover border-danger" onclick="mostrarSeccion('sedes')" style="cursor: pointer;">
+                        <h1 class="text-danger"><i class="bi bi-building"></i></h1>
+                        <h3>Gestión de Sedes (Academias)</h3>
+                        <p class="text-muted">Administrar ubicaciones y encargados</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="content-alumnos" class="content-panel">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold"><i class="bi bi-people-fill text-primary"></i> Alumnos Registrados</h2>
-                <button class="btn btn-primary px-4 shadow" data-bs-toggle="modal" data-bs-target="#modalAlumno">
-                    <i class="bi bi-plus-lg"></i> Nueva Matrícula
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                <h2><i class="bi bi-people"></i> Listado de Alumnos</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlumno">
+                    <i class="bi bi-plus-lg"></i> Nuevo Alumno
                 </button>
             </div>
-            <div id="students-list" class="row g-4">
-                </div>
+            <div id="students-list" class="row g-4"></div>
         </div>
 
         <div id="content-sedes" class="content-panel">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold"><i class="bi bi-building text-danger"></i> Sedes</h2>
-                <button class="btn btn-danger shadow" data-bs-toggle="modal" data-bs-target="#modalSede">
-                    <i class="bi bi-plus-lg"></i> Registrar Sede
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                <h2><i class="bi bi-building"></i> Sedes de Entrenamiento</h2>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalSede">
+                    <i class="bi bi-plus-lg"></i> Nueva Sede
                 </button>
             </div>
             <div id="sedes-list" class="row g-4"></div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalAlumno" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold">🥋 Nueva Matrícula</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="formAlumno">
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label fw-bold">Nombre</label><input type="text" id="a_nombre" class="form-control" required></div>
-                            <div class="col-md-6"><label class="form-label fw-bold">Apellido</label><input type="text" id="a_apellido" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label fw-bold">DNI</label><input type="text" id="a_dni" class="form-control"></div>
-                            <div class="col-md-4"><label class="form-label fw-bold">Teléfono</label><input type="text" id="a_telefono" class="form-control"></div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Cinta Inicial</label>
-                                <select id="a_cinta" class="form-select">
-                                    <option value="Blanca">Blanca</option><option value="Amarilla">Amarilla</option>
-                                    <option value="Verde">Verde</option><option value="Azul">Azul</option>
-                                    <option value="Roja">Roja</option><option value="Negra">Negra</option>
-                                </select>
-                            </div>
-                            <div class="col-12"><label class="form-label fw-bold">Correo Electrónico</label><input type="email" id="a_email" class="form-control"></div>
-                            <div class="col-12"><label class="form-label fw-bold">Dirección</label><input type="text" id="a_direccion" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label fw-bold">F. Nacimiento</label><input type="date" id="a_fechaNac" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label fw-bold">F. Ingreso</label><input type="date" id="a_fechaIngreso" class="form-control"></div>
-                        </div>
-                        <button type="button" class="btn btn-primary w-100 py-3 mt-4 fw-bold" onclick="guardarAlumno()">REGISTRAR ALUMNO</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalDetalle" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-person-badge"></i> Expediente del Alumno</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <ul class="nav nav-tabs px-3 pt-3 bg-light" id="tabAlumno" role="tablist">
-                        <li class="nav-item">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-datos" type="button">Datos y Edición</button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-asistencia" type="button">Asistencias</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-4">
-                        <div class="tab-pane fade show active" id="tab-datos">
-                            <form id="formEdicion">
-                                <input type="hidden" id="edit_id">
-                                <div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label small fw-bold">Nombre</label><input type="text" id="edit_nombre" class="form-control"></div>
-                                    <div class="col-md-6"><label class="form-label small fw-bold">Apellido</label><input type="text" id="edit_apellido" class="form-control"></div>
-                                    <div class="col-md-4"><label class="form-label small fw-bold">DNI</label><input type="text" id="edit_dni" class="form-control" readonly></div>
-                                    <div class="col-md-4"><label class="form-label small fw-bold">Teléfono</label><input type="text" id="edit_telefono" class="form-control"></div>
-                                    <div class="col-md-4"><label class="form-label small fw-bold">Grado/Cinta</label>
-                                        <select id="edit_cinta" class="form-select">
-                                            <option value="Blanca">Blanca</option><option value="Amarilla">Amarilla</option>
-                                            <option value="Verde">Verde</option><option value="Azul">Azul</option>
-                                            <option value="Roja">Roja</option><option value="Negra">Negra</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12"><label class="form-label small fw-bold">Correo</label><input type="email" id="edit_correo" class="form-control"></div>
-                                    <div class="col-12"><label class="form-label small fw-bold">Dirección</label><input type="text" id="edit_direccion" class="form-control"></div>
-                                    <div class="col-md-6"><label class="form-label small fw-bold">Fecha Ingreso</label><input type="date" id="edit_ingreso" class="form-control"></div>
-                                </div>
-                                <div class="d-flex gap-2 mt-4 pt-3 border-top">
-                                    <button type="button" class="btn btn-warning w-100 fw-bold" onclick="actualizarAlumno()">ACTUALIZAR DATOS</button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="eliminarAlumnoDesdeFicha()">ELIMINAR</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="tab-asistencia">
-                            <div class="text-center py-4">
-                                <button class="btn btn-success btn-lg px-5 shadow-sm mb-4" onclick="marcarAsistencia()">
-                                    <i class="bi bi-calendar-check"></i> MARCAR ASISTENCIA HOY
-                                </button>
-                                <div id="historial-asistencia" class="text-muted small">
-                                    <p>No hay registros de asistencia recientes.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -190,27 +89,48 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-person-vcard"></i> Mi Perfil</h5>
+                    <h5 class="modal-title"><i class="bi bi-person-vcard"></i> Mi Ficha de Sensei</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    
                     <div id="perfil-vista">
-                        <div class="mb-2"><strong>DNI:</strong> <span id="v_dni"></span></div>
-                        <div class="mb-2"><strong>Teléfono:</strong> <span id="v_telefono"></span></div>
-                        <div class="mb-2"><strong>Dirección:</strong> <span id="v_direccion"></span></div>
-                        <div class="mb-2"><strong>Nacimiento:</strong> <span id="v_fechaNac"></span></div>
-                        <button class="btn btn-primary w-100 mt-3" onclick="toggleEdicion(true)">Editar Perfil</button>
+                        <div class="dato-perfil"><span class="dato-label">DNI:</span> <span id="v_dni" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">Teléfono:</span> <span id="v_telefono" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">Dirección:</span> <span id="v_direccion" class="dato-valor">Cargando...</span></div>
+                        <div class="dato-perfil"><span class="dato-label">F. Nacimiento:</span> <span id="v_fechaNac" class="dato-valor">Cargando...</span></div>
+                        
+                        <div class="mt-4">
+                            <button id="btn-editar-perfil" class="btn btn-primary w-100 py-2" onclick="toggleEdicion(true)">
+                                <i class="bi bi-pencil-square"></i> Completar / Editar Datos
+                            </button>
+                        </div>
                     </div>
-                    <form id="perfil-editor" style="display:none;">
-                        <input type="text" id="p_dni" class="form-control mb-2" placeholder="DNI">
-                        <input type="text" id="p_telefono" class="form-control mb-2" placeholder="Teléfono">
-                        <input type="text" id="p_direccion" class="form-control mb-2" placeholder="Dirección">
-                        <input type="date" id="p_fechaNac" class="form-control mb-3">
+
+                    <form id="perfil-editor" style="display: none;">
+                        <div class="alert alert-info py-2 small">Solo se mostrarán los campos para actualizar.</div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">DNI</label>
+                            <input type="text" id="p_dni" class="form-control" placeholder="Ingrese su DNI">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            <input type="text" id="p_telefono" class="form-control" placeholder="Ej: 987654321">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <input type="text" id="p_direccion" class="form-control" placeholder="Av. Ejemplo 123">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de Nacimiento</label>
+                            <input type="date" id="p_fechaNac" class="form-control">
+                        </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-secondary w-50" onclick="toggleEdicion(false)">Cancelar</button>
-                            <button type="button" class="btn btn-success w-50" onclick="guardarPerfil()">Guardar</button>
+                            <button type="button" class="btn btn-success w-50" onclick="guardarPerfil()">Guardar Cambios</button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
