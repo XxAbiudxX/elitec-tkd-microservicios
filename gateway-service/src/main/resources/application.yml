@@ -21,3 +21,9 @@ spring:
             - Path=/api/auth/**
           filters:
             - StripPrefix=0
+        - id: student-service
+          uri: pure-upliftment-production-1b1f.up.railway.app 
+          predicates:
+            - Path=/api/alumnos/**
+          filters:
+            - StripPrefix=0
