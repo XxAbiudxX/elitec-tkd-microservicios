@@ -1,17 +1,18 @@
 package pe.elitec.academia_taekwondo.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "alumno") // Aseguramos que apunte a la tabla correcta
+@Table(name = "alumno")
 public class Alumno {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_alumno") // Coincide con tu captura de Neon
+    @Column(name = "id_alumno")
     private Long idAlumno;
 
     @Column(unique = true, nullable = false, length = 15)
@@ -23,16 +24,18 @@ public class Alumno {
     @Column(nullable = false, length = 50)
     private String apellido;
 
-    @Column(name = "fecha_nacimiento") // Mapeo exacto para Postgres
+    @Column(name = "fecha_nacimiento")
+    @JsonFormat(pattern = "yyyy-MM-dd") // 🟢 CRÍTICO: Para que Java entienda el input de la web
     private LocalDate fechaNacimiento;
 
     private String telefono;
     private String correo;
     private String direccion;
 
-    @Column(name = "cinta_actual", nullable = false) // Mapeo exacto para Postgres
+    @Column(name = "cinta_actual", nullable = false)
     private String cintaActual = "Blanca";
 
-    @Column(name = "fecha_ingreso") // Mapeo exacto para Postgres
+    @Column(name = "fecha_ingreso")
+    @JsonFormat(pattern = "yyyy-MM-dd") // 🟢 CRÍTICO: Para el formato de ingreso
     private LocalDate fechaIngreso = LocalDate.now();
 }

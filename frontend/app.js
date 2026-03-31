@@ -22,14 +22,16 @@ function cerrarSesion() {
 }
 
 function mostrarSeccion(sec) {
+    // Ocultar todos los paneles
     document.querySelectorAll('.content-panel').forEach(el => el.style.display = 'none');
     const panel = document.getElementById('content-' + sec);
     if(panel) panel.style.display = 'block';
     
+    // Actualizar Navbar
     document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    if(event && event.target && event.target.classList.contains('nav-link')) {
-        event.target.classList.add('active');
-    }
+    // Usamos querySelector para marcar el link activo si el evento no existe
+    const activeLink = document.querySelector(`[onclick="mostrarSeccion('${sec}')"]`);
+    if(activeLink) activeLink.classList.add('active');
 
     if(sec === 'alumnos') cargarAlumnos();
     if(sec === 'sedes') cargarSedes();
@@ -66,7 +68,7 @@ async function cargarDatosPerfil() {
             document.getElementById('p_direccion').value = u.direccion || '';
             document.getElementById('p_fechaNac').value = u.fechaNacimiento || '';
 
-            // Lógica de Bloqueo
+            // Lógica de Bloqueo Automático
             const estaCompleto = u.dni && u.telefono && u.direccion && u.fechaNacimiento;
             const btnEdit = document.getElementById('btn-editar-perfil');
             
@@ -123,18 +125,15 @@ async function cargarAlumnos() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
         
-        // Si el Gateway responde 404 o el servicio está caído
         if(!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            div.innerHTML = `<div class="alert alert-danger w-100">Error ${res.status}: El servicio de alumnos no responde correctamente.</div>`;
+            div.innerHTML = `<div class="alert alert-danger w-100">Error ${res.status}: Problema al conectar con el servicio de alumnos.</div>`;
             return;
         }
         
         const alumnos = await res.json();
         
-        // Validación CRÍTICA: Verificamos que sea una lista antes de usar forEach
         if(!Array.isArray(alumnos)) {
-            div.innerHTML = '<div class="alert alert-warning w-100">Error: El formato de datos recibido es incorrecto.</div>';
+            div.innerHTML = '<div class="alert alert-warning w-100">Error: Formato de datos no válido.</div>';
             return;
         }
 
@@ -159,14 +158,17 @@ async function cargarAlumnos() {
                 </div>`;
         });
     } catch (e) { 
-        div.innerHTML = `<div class="alert alert-danger w-100">Error de conexión: No se pudo alcanzar el servidor de alumnos.</div>`;
+        div.innerHTML = `<div class="alert alert-danger w-100">Error de conexión: Verifica que el microservicio esté activo.</div>`;
     }
 }
 
 async function guardarAlumno() {
-    const btn = event.target;
-    btn.disabled = true;
-    btn.innerHTML = 'Registrando...';
+    // Usamos el botón directo para evitar errores de contexto de evento
+    const btn = document.querySelector('button[onclick="guardarAlumno()"]');
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Registrando...';
+    }
 
     const nuevoAlumno = {
         nombre: document.getElementById('a_nombre').value,
@@ -189,20 +191,24 @@ async function guardarAlumno() {
 
         if (res.ok) {
             alert("🥋 ¡Alumno registrado con éxito!");
+            // Cerrar modal de forma segura
             const modalEl = document.getElementById('modalAlumno');
             const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
+            if(modal) modal.hide();
+            
             document.getElementById('formAlumno').reset();
             cargarAlumnos();
         } else {
-            const txt = await res.text();
-            alert("❌ Error al registrar: " + (txt || "Verifica los datos (DNI único)"));
+            const txt = await res.json();
+            alert("❌ Error al registrar: " + (txt.message || "Verifica que el DNI no esté repetido"));
         }
     } catch (e) {
-        alert("❌ Error de red: No hay conexión con el Student-Service.");
+        alert("❌ Error de red: No se pudo contactar con el Student-Service.");
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = 'Registrar Alumno';
+        if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Registrar Alumno';
+        }
     }
 }
 
@@ -228,10 +234,10 @@ async function cargarSedes() {
                 </div>`;
         });
     } catch (e) { 
-        div.innerHTML = '<div class="alert alert-danger w-100">Error al cargar Sedes.</div>';
+        div.innerHTML = '<div class="alert alert-danger w-100">Error al cargar las Sedes.</div>';
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Sistema Elitec TKD: Dashboard listo.");
+    console.log("Sistema Elitec TKD: Dashboard iniciado correctamente.");
 });
