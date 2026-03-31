@@ -3,157 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Taekwondo - Dashboard</title>
+    <title>Elitec TKD - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .content-panel { display: none; }
-        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; }
-        .dato-perfil { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
-        .dato-label { font-weight: bold; color: #666; }
-        .dato-valor { color: #333; }
+        :root { --sidebar-width: 250px; --tkd-red: #dc3545; }
+        body { background-color: #1a1a1a; color: white; } /* Fondo oscuro como en tu foto */
+        
+        /* Sidebar Estilo Profesional */
+        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; background: #212529; border-right: 1px solid #333; }
+        .main-content { margin-left: var(--sidebar-width); padding: 30px; }
+        
+        .nav-link { color: #adb5bd; padding: 12px 20px; border-radius: 8px; margin: 5px 15px; }
+        .nav-link:hover, .nav-link.active { background: var(--tkd-red); color: white; }
+        
+        .card-tkd { background: #2b2b2b; border: 1px solid #3d3d3d; border-radius: 12px; color: white; }
+        .btn-tkd { background: #ff8c00; border: none; color: white; font-weight: bold; } /* Color naranja de tus botones */
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-yin-yang"></i> Elitec TKD</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active" href="#" onclick="mostrarSeccion('inicio')">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('alumnos')">🥋 Alumnos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="mostrarSeccion('sedes')">🏛️ Sedes</a></li>
-                    <li class="nav-item">
-                        <a class="nav-link text-warning fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalPerfil" onclick="cargarDatosPerfil()">
-                            <i class="bi bi-person-circle"></i> Mi Perfil
-                        </a>
-                    </li>
-                </ul>
-                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div id="content-inicio" class="content-panel" style="display: block;">
-            <div class="alert alert-light border-start border-success border-5 shadow-sm">
-                <h4 class="alert-heading text-success">✅ Estado del Dojo</h4>
-                <p class="mb-0">¡Bienvenido, Sensei! Sesión activa y segura.</p>
-            </div>
-            <div class="row text-center mt-4 g-4">
-                <div class="col-md-6" onclick="mostrarSeccion('alumnos')" style="cursor: pointer;">
-                    <div class="card p-5 h-100 shadow-sm card-hover border-primary">
-                        <h1 class="text-primary"><i class="bi bi-people-fill"></i></h1>
-                        <h3>Gestión de Alumnos</h3>
-                        <p class="text-muted">Fichas, Asistencias e Historial</p>
-                    </div>
-                </div>
-                <div class="col-md-6" onclick="mostrarSeccion('sedes')" style="cursor: pointer;">
-                    <div class="card p-5 h-100 shadow-sm card-hover border-danger">
-                        <h1 class="text-danger"><i class="bi bi-building"></i></h1>
-                        <h3>Sedes</h3>
-                        <p class="text-muted">Administrar ubicaciones</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="content-alumnos" class="content-panel">
-            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                <h2><i class="bi bi-people"></i> Listado de Alumnos</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlumno">
-                    <i class="bi bi-plus-lg"></i> Nuevo Alumno
-                </button>
-            </div>
-            <div id="students-list" class="row g-4"></div>
-        </div>
-
-        <div id="content-sedes" class="content-panel">
-            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                <h2><i class="bi bi-building"></i> Sedes</h2>
-                <div id="sedes-list" class="row g-4"></div>
-            </div>
+    <div class="sidebar d-flex flex-column p-3">
+        <h4 class="text-center fw-bold mb-5"><i class="bi bi-yin-yang text-danger"></i> Elitec TKD</h4>
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="#" onclick="switchTab('inicio', this)"><i class="bi bi-grid-fill"></i> Mi Tablero</a>
+            <a class="nav-link" href="#" onclick="switchTab('alumnos', this)"><i class="bi bi-people-fill"></i> Mis Cursos / Alumnos</a>
+            <a class="nav-link" href="#" onclick="switchTab('sedes', this)"><i class="bi bi-building"></i> Sedes</a>
+            <a class="nav-link text-warning" href="#" onclick="switchTab('perfil', this)"><i class="bi bi-person-circle"></i> Mi Perfil</a>
+        </nav>
+        <div class="mt-auto p-3">
+            <button class="btn btn-outline-light w-100 btn-sm" onclick="cerrarSesion()">Salir <i class="bi bi-box-arrow-right"></i></button>
         </div>
     </div>
 
-    <div class="modal fade" id="modalAlumno" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">🥋 Nueva Matrícula</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="formAlumno">
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" id="a_nombre" class="form-control" required></div>
-                            <div class="col-md-6"><label class="form-label">Apellido</label><input type="text" id="a_apellido" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label">DNI</label><input type="text" id="a_dni" class="form-control"></div>
-                            <div class="col-md-4"><label class="form-label">Teléfono</label><input type="text" id="a_telefono" class="form-control"></div>
-                            <div class="col-md-4">
-                                <label class="form-label">Cinta</label>
-                                <select id="a_cinta" class="form-select">
-                                    <option value="Blanca">Blanca</option><option value="Roja">Roja</option><option value="Negra">Negra</option>
-                                </select>
-                            </div>
-                            <div class="col-12"><label class="form-label">Correo</label><input type="email" id="a_email" class="form-control"></div>
-                            <div class="col-12"><label class="form-label">Dirección</label><input type="text" id="a_direccion" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">F. Nacimiento</label><input type="date" id="a_fechaNac" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">F. Ingreso</label><input type="date" id="a_fechaIngreso" class="form-control"></div>
-                        </div>
-                        <button type="button" class="btn btn-primary w-100 py-2 mt-4 fw-bold" onclick="guardarAlumno()">REGISTRAR ALUMNO</button>
-                    </form>
-                </div>
+    <div class="main-content">
+        
+        <section id="sec-inicio" class="content-section active">
+            <div class="alert card-tkd p-4">
+                <h4><i class="bi bi-check-circle-fill text-success"></i> Estado del Dojo</h4>
+                <p class="mb-0">Bienvenido Sensei. El sistema está sincronizado.</p>
             </div>
-        </div>
-    </div>
+            </section>
 
-    <div class="modal fade" id="modalDetalle" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-person-badge"></i> Gestión de Alumno</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <section id="sec-alumnos" class="content-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">Gestión de Alumnos</h2>
+                <button class="btn btn-tkd" data-bs-toggle="modal" data-bs-target="#modalAlumno">+ Nuevo Alumno</button>
+            </div>
+            <div id="students-list" class="row g-4">
                 </div>
-                <div class="modal-body p-0">
-                    <ul class="nav nav-tabs px-3 pt-3 bg-light" id="tabAlumno" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-datos">Edición</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-asistencia">Asistencia</button></li>
-                    </ul>
-                    <div class="tab-content p-4">
-                        <div class="tab-pane fade show active" id="tab-datos">
-                            <form id="formEdicion">
-                                <input type="hidden" id="edit_id">
-                                <div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label small fw-bold">Nombre</label><input type="text" id="edit_nombre" class="form-control"></div>
-                                    <div class="col-md-6"><label class="form-label small fw-bold">Apellido</label><input type="text" id="edit_apellido" class="form-control"></div>
-                                    <div class="col-md-4"><label class="form-label small fw-bold">DNI</label><input type="text" id="edit_dni" class="form-control" readonly></div>
-                                    <div class="col-md-4"><label class="form-label small fw-bold">Cinta</label>
-                                        <select id="edit_cinta" class="form-select">
-                                            <option value="Blanca">Blanca</option><option value="Roja">Roja</option><option value="Negra">Negra</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-2 mt-4 pt-3 border-top">
-                                    <button type="button" class="btn btn-warning w-100 fw-bold" onclick="actualizarAlumno()">GUARDAR CAMBIOS</button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="eliminarAlumnoDesdeFicha()">ELIMINAR</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="tab-asistencia">
-                            <div class="text-center py-4">
-                                <button class="btn btn-success btn-lg shadow-sm" onclick="marcarAsistencia()">MARCAR PRESENTE HOY</button>
-                            </div>
-                        </div>
+        </section>
+
+        <section id="sec-sedes" class="content-section">
+            <h2 class="fw-bold">Sedes Universitarias</h2>
+            <div id="sedes-list" class="row g-4"></div>
+        </section>
+
+        <section id="sec-perfil" class="content-section">
+            <div class="card-tkd p-4">
+                <div class="row">
+                    <div class="col-md-2 text-center">
+                        <img src="https://via.placeholder.com/150" class="rounded-circle img-thumbnail" id="perfil-img">
+                    </div>
+                    <div class="col-md-10">
+                        <h2 id="p-nombre">Nombre del Sensei</h2>
+                        <span class="badge bg-danger">Ciencias de la Comunicación</span>
                     </div>
                 </div>
+                <hr class="border-secondary">
+                <div class="row mt-4" id="perfil-data">
+                    </div>
             </div>
-        </div>
+        </section>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

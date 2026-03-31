@@ -2,41 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elitec TKD - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background: linear-gradient(135deg, #dc3545 0%, #212529 100%); min-height: 100vh; display: flex; align-items: center; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .btn-danger { background-color: #dc3545; border: none; padding: 12px; font-weight: bold; }
+        body { background: linear-gradient(135deg, #dc3545 0%, #212529 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { width: 100%; max-width: 400px; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card p-5 text-center">
-                    <div class="mb-4">
-                        <h1 class="display-4 text-danger"><i class="bi bi-yin-yang"></i></h1>
-                        <h2 class="fw-bold">Elitec TKD</h2>
-                        <p class="text-muted">Acceso al Sistema de Gestión</p>
-                    </div>
-                    <form id="loginForm">
-                        <div class="mb-3 text-start">
-                            <label class="form-label fw-bold small">Correo Electrónico</label>
-                            <input type="email" id="email" class="form-control" placeholder="ejemplo@tkd.com" required>
-                        </div>
-                        <div class="mb-4 text-start">
-                            <label class="form-label fw-bold small">Contraseña</label>
-                            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-                        </div>
-                        <button type="submit" class="btn btn-danger w-100 shadow-sm">ENTRAR AL DOJO</button>
-                    </form>
-                    <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
-                </div>
-            </div>
-        </div>
+    <div class="login-card text-center">
+        <h1 class="text-danger mb-4"><i class="bi bi-yin-yang"></i> Elitec TKD</h1>
+        <form id="loginForm">
+            <div class="mb-3 text-start"><label class="form-label fw-bold">Correo</label><input type="email" id="email" class="form-control" required></div>
+            <div class="mb-4 text-start"><label class="form-label fw-bold">Contraseña</label><input type="password" id="password" class="form-control" required></div>
+            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold shadow-sm">ENTRAR AL DOJO</button>
+        </form>
+        <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
     </div>
     <script src="login.js"></script>
 </body>
