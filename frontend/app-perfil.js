@@ -21,8 +21,9 @@ async function cargarPerfil() {
             document.getElementById('p-full-name').innerText = `${u.nombre} ${u.apellido || ''}`;
             document.getElementById('p-foto').src = `https://ui-avatars.com/api/?name=${u.nombre}+${u.apellido || ''}&background=random`;
             
-            // Determinar Rol para el Badge (Limpieza de prefijo ROLE_)
-            const rolLimpio = window.userRole ? window.userRole.replace('ROLE_', '') : 'ALUMNO';
+            // Determinar Rol (Prioridad al objeto usuario de la DB, luego al token)
+            const rolFinal = u.rol || window.userRole || 'ROLE_ALUMNO';
+            const rolLimpio = rolFinal.replace('ROLE_', '');
             document.getElementById('p-badge-rol').innerText = `RANGO: ${rolLimpio}`;
 
             // Dibujar Cuadrícula de Datos con validación anti-nulos
@@ -58,34 +59,23 @@ async function actualizarDatos() {
     const tel = document.getElementById('edit-tel').value.trim();
     const dir = document.getElementById('edit-dir').value.trim();
 
-    // Evitamos enviar datos vacíos a la base de datos
     if (!tel || !dir) {
-        alert("⚠️ Por favor, completa tu teléfono y dirección para validar tu ficha.");
+        alert("⚠️ Por favor, completa tu teléfono y dirección.");
         return;
     }
 
-    const datos = {
-        email: email,
-        telefono: tel,
-        direccion: dir
-    };
+    const datos = { email, telefono: tel, direccion: dir };
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
-            method: 'PUT', 
-            headers, 
-            body: JSON.stringify(datos)
+            method: 'PUT', headers, body: JSON.stringify(datos)
         });
         
         if (res.ok) {
             alert("✅ ¡Información sincronizada correctamente!");
             cargarPerfil(); 
-        } else {
-            alert("❌ No se pudo actualizar el perfil.");
         }
-    } catch (e) { 
-        alert("Error al conectar con el Gateway."); 
-    }
+    } catch (e) { alert("Error al conectar con el Gateway."); }
 }
 
 function cerrarSesion() {
@@ -94,17 +84,26 @@ function cerrarSesion() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificación de Rango para mostrar pestañas de Admin
+    // 🛡️ LÓGICA DE INYECCIÓN DE PESTAÑAS SEGÚN RANGO
     const currentRole = window.userRole || 'ROLE_ALUMNO';
-    
-    if (currentRole.includes('ADMIN') || currentRole.includes('PROFESOR')) {
-        const navAdmin = document.getElementById('nav-admin-extras');
-        if (navAdmin) {
+    const navAdmin = document.getElementById('nav-admin-extras');
+
+    if (navAdmin) {
+        if (currentRole.includes('ADMIN')) {
+            // EL ADMIN VE TODO
+            navAdmin.innerHTML = `
+                <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
+                <a class="nav-link" href="usuarios.html"><i class="bi bi-shield-lock"></i> Usuarios y Roles</a>
+                <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
+            `;
+        } else if (currentRole.includes('PROFESOR')) {
+            // EL PROFESOR SOLO VE ALUMNOS Y SEDES
             navAdmin.innerHTML = `
                 <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
                 <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
             `;
         }
     }
+    
     cargarPerfil();
 });
