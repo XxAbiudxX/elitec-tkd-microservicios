@@ -43,15 +43,16 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creando...';
     btn.disabled = true;
 
+    // CAPTURA DE DATOS CORREGIDA
     const nuevoUsuario = {
         nombre: document.getElementById('regNombre').value,
+        apellido: document.getElementById('regApellido').value, // <-- Se agregó apellido
         email: document.getElementById('regEmail').value,
         password: document.getElementById('regPassword').value,
         rol: "ADMIN"
     };
 
     try {
-        // Usamos la variable de la nube + la ruta de registro
         const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -63,7 +64,8 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
             document.getElementById('login-tab').click(); 
             document.getElementById('formRegistro').reset();
         } else {
-            alert("No se pudo crear la cuenta. Verifica que el backend tenga el endpoint /register.");
+            const errorMsg = await res.text();
+            alert("Error: " + errorMsg);
         }
     } catch (error) {
         alert("Error de conexión con el servidor en la nube.");
