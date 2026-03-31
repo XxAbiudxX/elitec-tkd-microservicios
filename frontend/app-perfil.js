@@ -3,6 +3,13 @@ const token = localStorage.getItem('jwtToken');
 const email = localStorage.getItem('userEmail');
 const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
+// Función auxiliar para limpiar datos nulos o vacíos
+const validarDato = (valor, reemplazo = 'PENDIENTE') => {
+    return (valor && valor !== "null" && valor !== "undefined" && valor.toString().trim() !== "") 
+        ? valor 
+        : `<span class="text-warning opacity-50">${reemplazo}</span>`;
+};
+
 async function cargarPerfil() {
     const grid = document.getElementById('perfil-grid');
     try {
@@ -11,30 +18,30 @@ async function cargarPerfil() {
             const u = await res.json();
             
             // Actualizar Cabecera
-            document.getElementById('p-full-name').innerText = `${u.nombre} ${u.apellido}`;
-            document.getElementById('p-foto').src = `https://ui-avatars.com/api/?name=${u.nombre}+${u.apellido}&background=random`;
+            document.getElementById('p-full-name').innerText = `${u.nombre} ${u.apellido || ''}`;
+            document.getElementById('p-foto').src = `https://ui-avatars.com/api/?name=${u.nombre}+${u.apellido || ''}&background=random`;
             
-            // Determinar Rol para el Badge
-            const rol = window.userRole.replace('ROLE_', '');
-            document.getElementById('p-badge-rol').innerText = `RANGO: ${rol}`;
+            // Determinar Rol para el Badge (Limpieza de prefijo ROLE_)
+            const rolLimpio = window.userRole ? window.userRole.replace('ROLE_', '') : 'ALUMNO';
+            document.getElementById('p-badge-rol').innerText = `RANGO: ${rolLimpio}`;
 
-            // Dibujar Cuadrícula de Datos
+            // Dibujar Cuadrícula de Datos con validación anti-nulos
             grid.innerHTML = `
-                <div class="col-md-6">
+                <div class="col-md-6 mb-3">
                     <p class="text-muted small mb-0">DOCUMENTO DE IDENTIDAD (DNI)</p>
-                    <p class="fw-bold text-white fs-5">${u.dni || 'PENDIENTE DE REGISTRO'}</p>
+                    <p class="fw-bold text-white fs-5">${validarDato(u.dni, 'DNI NO REGISTRADO')}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-3">
                     <p class="text-muted small mb-0">CORREO ELECTRÓNICO</p>
                     <p class="fw-bold text-white fs-5">${u.email}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-3">
                     <p class="text-muted small mb-0">DIRECCIÓN DE RESIDENCIA</p>
-                    <p class="fw-bold text-white fs-5">${u.direccion || 'No especificada'}</p>
+                    <p class="fw-bold text-white fs-5 text-uppercase">${validarDato(u.direccion, 'DIRECCIÓN PENDIENTE')}</p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-3">
                     <p class="text-muted small mb-0">ESTADO EN EL DOJO</p>
-                    <p class="fw-bold text-success fs-5">● ACTIVO</p>
+                    <p class="fw-bold text-success fs-5">● ACTIVO / VALIDADO</p>
                 </div>
             `;
 
@@ -42,25 +49,43 @@ async function cargarPerfil() {
             document.getElementById('edit-tel').value = u.telefono || '';
             document.getElementById('edit-dir').value = u.direccion || '';
         }
-    } catch (e) { grid.innerHTML = "Error al conectar con el servicio de autenticación."; }
+    } catch (e) { 
+        grid.innerHTML = `<div class="alert alert-danger">Error de conexión con la base de datos Neon.</div>`; 
+    }
 }
 
 async function actualizarDatos() {
+    const tel = document.getElementById('edit-tel').value.trim();
+    const dir = document.getElementById('edit-dir').value.trim();
+
+    // Evitamos enviar datos vacíos a la base de datos
+    if (!tel || !dir) {
+        alert("⚠️ Por favor, completa tu teléfono y dirección para validar tu ficha.");
+        return;
+    }
+
     const datos = {
         email: email,
-        telefono: document.getElementById('edit-tel').value,
-        direccion: document.getElementById('edit-dir').value
+        telefono: tel,
+        direccion: dir
     };
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
-            method: 'PUT', headers, body: JSON.stringify(datos)
+            method: 'PUT', 
+            headers, 
+            body: JSON.stringify(datos)
         });
+        
         if (res.ok) {
-            alert("✅ Información actualizada correctamente.");
-            cargarPerfil(); // Recargar datos
+            alert("✅ ¡Información sincronizada correctamente!");
+            cargarPerfil(); 
+        } else {
+            alert("❌ No se pudo actualizar el perfil.");
         }
-    } catch (e) { alert("Error al actualizar perfil."); }
+    } catch (e) { 
+        alert("Error al conectar con el Gateway."); 
+    }
 }
 
 function cerrarSesion() {
@@ -69,12 +94,17 @@ function cerrarSesion() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Si es ADMIN, mostrar links de gestión en el sidebar (opcional)
-    if (window.userRole !== 'ROLE_ALUMNO') {
-        document.getElementById('nav-admin-extras').innerHTML = `
-            <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
-            <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
-        `;
+    // Verificación de Rango para mostrar pestañas de Admin
+    const currentRole = window.userRole || 'ROLE_ALUMNO';
+    
+    if (currentRole.includes('ADMIN') || currentRole.includes('PROFESOR')) {
+        const navAdmin = document.getElementById('nav-admin-extras');
+        if (navAdmin) {
+            navAdmin.innerHTML = `
+                <a class="nav-link" href="alumnos.html"><i class="bi bi-people"></i> Gestión Alumnos</a>
+                <a class="nav-link" href="sedes.html"><i class="bi bi-geo-alt"></i> Sedes</a>
+            `;
+        }
     }
     cargarPerfil();
 });
