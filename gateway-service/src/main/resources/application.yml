@@ -1,7 +1,6 @@
 spring:
   cloud:
     gateway:
-      # --- ESTO VA AQUÍ (Al mismo nivel que routes y globalcors) ---
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
       globalcors:
@@ -15,14 +14,18 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
       routes:
+        # --- RUTA DE AUTENTICACIÓN ---
         - id: auth-service
           uri: https://auth-service-production-8fc3.up.railway.app
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=0
+
+        # --- RUTA DE ALUMNOS (CORREGIDA) ---
         - id: student-service
-          uri: pure-upliftment-production-1b1f.up.railway.app 
+          # Agregamos el https:// que faltaba
+          uri: https://pure-upliftment-production-1b1f.up.railway.app 
           predicates:
             - Path=/api/alumnos/**
           filters:
