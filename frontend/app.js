@@ -10,6 +10,8 @@ function getHeaders() {
 }
 
 // --- LÓGICA DE NAVEGACIÓN ---
+let alumnosCache = []; // Variable global para manejar la edición rápida
+
 function cerrarSesion() { 
     localStorage.clear();
     window.location.href = 'login.html';
@@ -86,35 +88,27 @@ async function cargarAlumnos() {
     
     try {
         const res = await fetch(`${API_BASE_URL}/api/alumnos`, { headers: getHeaders() });
-        const alumnos = await res.json();
+        alumnosCache = await res.json(); // Guardamos en cache para el "Ver Ficha"
         div.innerHTML = '';
         
-        if(!Array.isArray(alumnos) || alumnos.length === 0) {
+        if(!Array.isArray(alumnosCache) || alumnosCache.length === 0) {
             div.innerHTML = '<div class="alert alert-warning w-100 text-center">No hay alumnos en el Dojo.</div>';
             return;
         }
 
-        alumnos.forEach((a) => {
-            // Solución al problema del nombre: mostramos "Sin nombre" si el campo llega nulo
-            const nombreMostrar = a.nombre ? a.nombre : '<span class="text-danger">Sin nombre</span>';
-            const apellidoMostrar = a.apellido ? a.apellido : '';
-
+        alumnosCache.forEach((a, index) => {
+            const nombreMostrar = a.nombre || '<span class="text-danger">Sin nombre</span>';
             div.innerHTML += `
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-start border-primary border-4 card-hover">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h5 class="fw-bold text-dark">${nombreMostrar} ${apellidoMostrar}</h5>
-                                <button class="btn btn-outline-danger btn-sm border-0" onclick="eliminarAlumno(${a.idAlumno}, '${a.nombre}')">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </div>
+                            <h5 class="fw-bold text-dark">${nombreMostrar} ${a.apellido || ''}</h5>
                             <p class="text-muted small mb-1">📧 ${a.correo || '-'}</p>
                             <p class="text-muted small mb-2">🪪 DNI: ${a.dni || '-'}</p>
                             <span class="badge bg-dark mb-3">Cinta: ${a.cintaActual || 'Blanca'}</span>
                             <div class="d-grid">
-                                <button class="btn btn-sm btn-outline-primary" onclick="alert('Próximamente: Detalle de asistencias')">
-                                    <i class="bi bi-eye"></i> Ver Ficha
+                                <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${index})">
+                                    <i class="bi bi-eye"></i> Ver Ficha / Gestionar
                                 </button>
                             </div>
                         </div>
@@ -122,6 +116,74 @@ async function cargarAlumnos() {
                 </div>`;
         });
     } catch (e) { div.innerHTML = `<div class="alert alert-danger w-100">Error de conexión.</div>`; }
+}
+
+// --- CARGAR DATOS EN EL MODAL DE DETALLE ---
+function verDetalle(index) {
+    const a = alumnosCache[index];
+    
+    // Llenamos el formulario del modal de gestión
+    document.getElementById('edit_id').value = a.idAlumno;
+    document.getElementById('edit_nombre').value = a.nombre || '';
+    document.getElementById('edit_apellido').value = a.apellido || '';
+    document.getElementById('edit_dni').value = a.dni || '';
+    document.getElementById('edit_telefono').value = a.telefono || '';
+    document.getElementById('edit_direccion').value = a.direccion || '';
+    document.getElementById('edit_correo').value = a.correo || '';
+    document.getElementById('edit_cinta').value = a.cintaActual || 'Blanca';
+    document.getElementById('edit_ingreso').value = a.fechaIngreso || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+    modal.show();
+}
+
+// --- ACTUALIZAR DATOS DEL ALUMNO ---
+async function actualizarAlumno() {
+    const id = document.getElementById('edit_id').value;
+    const datos = {
+        nombre: document.getElementById('edit_nombre').value,
+        apellido: document.getElementById('edit_apellido').value,
+        dni: document.getElementById('edit_dni').value,
+        telefono: document.getElementById('edit_telefono').value,
+        direccion: document.getElementById('edit_direccion').value,
+        correo: document.getElementById('edit_correo').value,
+        cintaActual: document.getElementById('edit_cinta').value,
+        fechaIngreso: document.getElementById('edit_ingreso').value
+    };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/alumnos/${id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(datos)
+        });
+
+        if (res.ok) {
+            alert("✅ Datos actualizados correctamente.");
+            bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+            cargarAlumnos();
+        }
+    } catch (e) { alert("❌ Error al actualizar."); }
+}
+
+// --- ELIMINAR DESDE LA FICHA ---
+async function eliminarAlumnoDesdeFicha() {
+    const id = document.getElementById('edit_id').value;
+    const nombre = document.getElementById('edit_nombre').value;
+    if (!confirm(`¿Estás seguro de eliminar a ${nombre}?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/alumnos/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+
+        if (res.ok) {
+            alert("🗑️ Alumno eliminado.");
+            bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+            cargarAlumnos();
+        }
+    } catch (e) { alert("❌ Error al eliminar."); }
 }
 
 async function guardarAlumno() {
@@ -159,25 +221,9 @@ async function guardarAlumno() {
     finally { btn.disabled = false; btn.innerHTML = 'Registrar Alumno'; }
 }
 
-// --- FUNCIÓN PARA ELIMINAR (NUEVO) ---
-async function eliminarAlumno(id, nombre) {
-    if (!confirm(`¿Estás seguro de eliminar a ${nombre || 'este alumno'} del Dojo?`)) return;
-
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/alumnos/${id}`, {
-            method: 'DELETE',
-            headers: getHeaders()
-        });
-
-        if (res.ok) {
-            alert("🗑️ Alumno eliminado correctamente.");
-            cargarAlumnos(); // Recargamos la lista
-        } else {
-            alert("❌ No se pudo eliminar el alumno.");
-        }
-    } catch (e) {
-        alert("❌ Error de conexión al intentar eliminar.");
-    }
+// --- ASISTENCIA (SIMULADO) ---
+function marcarAsistencia() {
+    alert("✅ Asistencia marcada para el día de hoy.");
 }
 
 // --- 🏛️ MÓDULO SEDES ---
