@@ -6,6 +6,9 @@ public class RegisterRequest {
     private String password;
     private String rol;
 
+    public RegisterRequest() {
+    }
+
     // Getters y Setters
     public String getNombre() {
         return nombre;

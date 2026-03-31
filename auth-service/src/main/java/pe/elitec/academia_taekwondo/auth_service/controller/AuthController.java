@@ -59,6 +59,10 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: El correo ya está registrado.");
         }
 
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setEmail(request.getEmail());
+        nuevoUsuario.setPassword(passwordEncoder.encode(request.getPassword()));
+
         // 2. Buscamos el rol ADMIN en la base de datos
         Optional<Rol> rolAdmin = rolRepository.findByNombre("ADMIN");
         if (rolAdmin.isEmpty()) {
