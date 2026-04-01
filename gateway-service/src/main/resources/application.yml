@@ -27,6 +27,6 @@ spring:
           # Agregamos el https:// que faltaba
           uri: https://pure-upliftment-production-1b1f.up.railway.app 
           predicates:
-            - Path=/api/alumnos/**
+            - Path=/api/alumnos/**, /api/sedes/**
           filters:
             - StripPrefix=0
