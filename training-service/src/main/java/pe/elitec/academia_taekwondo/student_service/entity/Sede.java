@@ -1,4 +1,4 @@
-package pe.elitec.academia_taekwondo.student_service.entity; // Mantendremos el paquete por ahora para no romper nada
+package pe.elitec.academia_taekwondo.student_service.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
