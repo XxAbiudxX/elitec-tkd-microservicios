@@ -14,6 +14,8 @@ import pe.elitec.academia_taekwondo.auth_service.entity.Usuario;
 import pe.elitec.academia_taekwondo.auth_service.repository.RolRepository;
 import pe.elitec.academia_taekwondo.auth_service.repository.UsuarioRepository;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.time.LocalDate;
@@ -26,7 +28,7 @@ public class AuthController {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private RolRepository rolRepository; // <-- ¡Agregamos el buscador de roles!
+    private RolRepository rolRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -133,5 +135,40 @@ public class AuthController {
                     return ResponseEntity.ok(usuario);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // --- NUEVO: LISTAR TODOS LOS USUARIOS (PANEL DE ADMINISTRADOR) ---
+    @GetMapping("/usuarios")
+    public ResponseEntity<List<Usuario>> listarTodosLosUsuarios() {
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        // Ocultamos las contraseñas antes de enviarlas al frontend por seguridad
+        usuarios.forEach(u -> u.setPassword(null));
+        return ResponseEntity.ok(usuarios);
+    }
+
+    // --- NUEVO: ACTUALIZAR ROL DE UN USUARIO ---
+    @PutMapping("/usuarios/{id}/rol")
+    public ResponseEntity<?> cambiarRol(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String nuevoRolNombre = body.get("rol"); // Viene como "ROLE_ADMIN" o "ROLE_ALUMNO" desde el JS
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
+        }
+
+        // Limpiamos el prefijo "ROLE_" para buscarlo en la base de datos como "ADMIN" o
+        // "ALUMNO"
+        String rolLimpio = nuevoRolNombre.replace("ROLE_", "");
+
+        Optional<Rol> rolOpt = rolRepository.findByNombre(rolLimpio);
+        if (rolOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Error: El rol " + rolLimpio + " no existe en la base de datos.");
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        usuario.setRoles(Set.of(rolOpt.get()));
+        usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok("Rol actualizado con éxito.");
     }
 }

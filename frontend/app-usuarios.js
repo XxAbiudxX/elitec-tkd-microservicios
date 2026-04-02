@@ -4,66 +4,71 @@ const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer $
 
 async function cargarUsuarios() {
     const tbody = document.getElementById('usuarios-table-body');
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center"><div class="spinner-border text-danger"></div></td></tr>';
-
+    
     try {
-        // Suponiendo que tu auth-service tiene un endpoint para listar usuarios
+        // Asumimos que tu auth-service responderá a esta ruta
         const res = await fetch(`${API_BASE_URL}/api/auth/usuarios`, { headers });
-        if (!res.ok) throw new Error("Error al obtener usuarios");
         
-        const usuarios = await res.json();
-        tbody.innerHTML = '';
-
-        usuarios.forEach(u => {
-            // Extraer el rol principal
-            const rolActual = u.rol || 'ROLE_ALUMNO';
+        if (res.ok) {
+            const usuarios = await res.json();
+            tbody.innerHTML = '';
             
-            tbody.innerHTML += `
-                <tr>
-                    <td class="align-middle">${u.nombre || 'N/A'} ${u.apellido || ''}</td>
-                    <td class="align-middle">${u.email}</td>
-                    <td class="align-middle">
-                        <span class="badge ${rolActual.includes('ADMIN') ? 'bg-danger' : rolActual.includes('PROFESOR') ? 'bg-primary' : 'bg-secondary'}">
-                            ${rolActual.replace('ROLE_', '')}
-                        </span>
-                    </td>
-                    <td class="align-middle">
-                        <select class="form-select form-select-sm bg-dark text-white border-secondary d-inline-block w-auto" 
-                                onchange="cambiarRol('${u.email}', this.value)">
-                            <option value="" selected disabled>Cambiar a...</option>
-                            <option value="ROLE_ADMIN">Administrador</option>
-                            <option value="ROLE_PROFESOR">Profesor</option>
-                            <option value="ROLE_ALUMNO">Alumno</option>
-                        </select>
-                    </td>
-                </tr>
-            `;
-        });
+            usuarios.forEach(u => {
+                // Mapeamos el rol para que se vea limpio
+                let rolActual = u.roles && u.roles.length > 0 ? u.roles[0].rolNombre : 'ROLE_ALUMNO';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-muted">#${u.id}</td>
+                        <td class="text-white fw-bold">${u.nombreUsuario || u.email}</td>
+                        <td><span class="badge ${rolActual === 'ROLE_ADMIN' ? 'bg-danger' : 'bg-primary'}">${rolActual}</span></td>
+                        <td>
+                            <select id="select-rol-${u.id}" class="form-select form-select-sm bg-dark text-white border-secondary">
+                                <option value="ROLE_ALUMNO" ${rolActual === 'ROLE_ALUMNO' ? 'selected' : ''}>Alumno</option>
+                                <option value="ROLE_ADMIN" ${rolActual === 'ROLE_ADMIN' ? 'selected' : ''}>Administrador</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btn-sm fw-bold" onclick="actualizarRol(${u.id})">Guardar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar usuarios. ¿Tienes permisos?</td></tr>';
+        }
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error: Asegúrate de que el endpoint /api/auth/usuarios exista en tu backend.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error de conexión con el servidor.</td></tr>';
     }
 }
 
-async function cambiarRol(email, nuevoRol) {
-    if(!confirm(`¿Seguro que deseas cambiar el rol de ${email} a ${nuevoRol.replace('ROLE_', '')}?`)) return;
+async function actualizarRol(usuarioId) {
+    const nuevoRol = document.getElementById(`select-rol-${usuarioId}`).value;
+    
+    if (!confirm(`¿Seguro que deseas cambiar el rol a ${nuevoRol}?`)) return;
 
     try {
-        // Suponiendo que tienes un endpoint para actualizar el rol
-        const res = await fetch(`${API_BASE_URL}/api/auth/usuarios/rol`, {
+        // Apuntamos al endpoint de actualización en el auth-service
+        const res = await fetch(`${API_BASE_URL}/api/auth/usuarios/${usuarioId}/rol`, {
             method: 'PUT',
-            headers,
-            body: JSON.stringify({ email: email, rol: nuevoRol })
+            headers: headers,
+            body: JSON.stringify({ rol: nuevoRol })
         });
 
         if (res.ok) {
-            alert("✅ Rol actualizado en la base de datos.");
-            cargarUsuarios(); // Recargar la tabla
+            alert("✅ Rol actualizado correctamente.");
+            cargarUsuarios(); // Recargamos la tabla
         } else {
-            alert("❌ No se pudo actualizar el rol.");
+            alert("❌ Error al actualizar el rol. Revisa el backend.");
         }
     } catch (e) {
-        alert("Error de conexión al intentar cambiar el rol.");
+        alert("🔌 Error de conexión.");
     }
+}
+
+function cerrarSesion() {
+    localStorage.clear();
+    window.location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', cargarUsuarios);
