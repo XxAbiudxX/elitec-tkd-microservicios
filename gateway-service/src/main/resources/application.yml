@@ -30,3 +30,11 @@ spring:
             - Path=/api/alumnos/**, /api/sedes/**
           filters:
             - StripPrefix=0
+        # --- RUTA DE ENTRENAMIENTO (HORARIOS Y ASISTENCIAS) ---
+        - id: training-service
+          # Asegúrate de poner la URL correcta de tu training-service en Railway
+          uri: https://training-service-production-3fe4.up.railway.app 
+          predicates:
+            - Path=/api/horarios/**, /api/asistencias/**
+          filters:
+            - StripPrefix=0
