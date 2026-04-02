@@ -6,7 +6,6 @@ async function cargarUsuarios() {
     const tbody = document.getElementById('usuarios-table-body');
     
     try {
-        // Asumimos que tu auth-service responderá a esta ruta
         const res = await fetch(`${API_BASE_URL}/api/auth/usuarios`, { headers });
         
         if (res.ok) {
@@ -14,18 +13,29 @@ async function cargarUsuarios() {
             tbody.innerHTML = '';
             
             usuarios.forEach(u => {
-                // Mapeamos el rol para que se vea limpio
-                let rolActual = u.roles && u.roles.length > 0 ? u.roles[0].rolNombre : 'ROLE_ALUMNO';
+                // CORRECCIÓN: Leemos u.roles[0].nombre (que traerá "ADMIN", "PROFESOR" o "ALUMNO")
+                let rolActual = (u.roles && u.roles.length > 0 && u.roles[0].nombre) 
+                                ? u.roles[0].nombre 
+                                : 'ALUMNO';
                 
+                // Le damos colores distintivos a cada rol
+                let badgeClass = 'bg-primary'; // Azul para Alumno
+                if (rolActual === 'ADMIN') badgeClass = 'bg-danger'; // Rojo para Admin
+                if (rolActual === 'PROFESOR') badgeClass = 'bg-warning text-dark'; // Amarillo para Profesor
+                
+                // Usamos el email por defecto
+                let correo = u.email || 'Sin correo';
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="text-muted">#${u.id}</td>
-                        <td class="text-white fw-bold">${u.nombreUsuario || u.email}</td>
-                        <td><span class="badge ${rolActual === 'ROLE_ADMIN' ? 'bg-danger' : 'bg-primary'}">${rolActual}</span></td>
+                        <td class="text-white fw-bold">${correo}</td>
+                        <td><span class="badge ${badgeClass}">${rolActual}</span></td>
                         <td>
                             <select id="select-rol-${u.id}" class="form-select form-select-sm bg-dark text-white border-secondary">
-                                <option value="ROLE_ALUMNO" ${rolActual === 'ROLE_ALUMNO' ? 'selected' : ''}>Alumno</option>
-                                <option value="ROLE_ADMIN" ${rolActual === 'ROLE_ADMIN' ? 'selected' : ''}>Administrador</option>
+                                <option value="ALUMNO" ${rolActual === 'ALUMNO' ? 'selected' : ''}>Alumno</option>
+                                <option value="PROFESOR" ${rolActual === 'PROFESOR' ? 'selected' : ''}>Profesor</option>
+                                <option value="ADMIN" ${rolActual === 'ADMIN' ? 'selected' : ''}>Administrador</option>
                             </select>
                         </td>
                         <td>
@@ -48,16 +58,15 @@ async function actualizarRol(usuarioId) {
     if (!confirm(`¿Seguro que deseas cambiar el rol a ${nuevoRol}?`)) return;
 
     try {
-        // Apuntamos al endpoint de actualización en el auth-service
         const res = await fetch(`${API_BASE_URL}/api/auth/usuarios/${usuarioId}/rol`, {
             method: 'PUT',
             headers: headers,
-            body: JSON.stringify({ rol: nuevoRol })
+            body: JSON.stringify({ rol: nuevoRol }) // Mandamos directamente "ADMIN", "ALUMNO" o "PROFESOR"
         });
 
         if (res.ok) {
             alert("✅ Rol actualizado correctamente.");
-            cargarUsuarios(); // Recargamos la tabla
+            cargarUsuarios(); // Recargamos la tabla para ver el cambio inmediato
         } else {
             alert("❌ Error al actualizar el rol. Revisa el backend.");
         }

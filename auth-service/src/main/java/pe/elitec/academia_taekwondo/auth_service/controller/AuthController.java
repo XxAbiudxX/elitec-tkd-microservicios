@@ -65,33 +65,30 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest request) {
 
-        // 1. Verificamos que el correo no exista ya
         if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: El correo ya está registrado.");
         }
 
-        // 2. Buscamos el rol ADMIN en la base de datos
-        Optional<Rol> rolAdmin = rolRepository.findByNombre("ADMIN");
-        if (rolAdmin.isEmpty()) {
+        // 🛑 CORRECCIÓN: Buscamos el rol ALUMNO por defecto para los registros nuevos,
+        // ¡no ADMIN!
+        Optional<Rol> rolPorDefecto = rolRepository.findByNombre("ALUMNO");
+        if (rolPorDefecto.isEmpty()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error crítico: El rol ADMIN no existe en la base de datos.");
+                    .body("Error crítico: El rol ALUMNO no existe en la base de datos.");
         }
 
-        // 3. Creamos al nuevo Sensei (UN SOLO OBJETO)
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(request.getNombre());
         nuevoUsuario.setApellido(request.getApellido());
         nuevoUsuario.setEmail(request.getEmail());
-        nuevoUsuario.setEstado(true); // Aseguramos que empiece activo
+        nuevoUsuario.setEstado(true);
 
-        // 4. Encriptamos la contraseña
         String contrasenaEncriptada = passwordEncoder.encode(request.getPassword());
         nuevoUsuario.setPassword(contrasenaEncriptada);
 
-        // 5. Le asignamos el rol
-        nuevoUsuario.setRoles(Set.of(rolAdmin.get()));
+        // Asignamos el rol ALUMNO
+        nuevoUsuario.setRoles(Set.of(rolPorDefecto.get()));
 
-        // 6. ¡Guardamos en Neon!
         usuarioRepository.save(nuevoUsuario);
 
         return ResponseEntity.ok("Cuenta creada exitosamente en la base de datos.");
