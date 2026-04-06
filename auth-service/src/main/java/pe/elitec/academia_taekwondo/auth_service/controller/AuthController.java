@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.HashSet; // <-- ¡Importante! Necesario para las listas mutables de Hibernate
 import java.time.LocalDate;
 
 @RestController
@@ -45,16 +46,14 @@ public class AuthController {
             Usuario usuario = usuarioOpt.get();
 
             if (passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
-                // 🛡️ EXTRACCIÓN DE ROL SEGURA
-                String rolNombre = "ALUMNO"; // Rol por defecto en caso de vacío
+                String rolNombre = "ALUMNO";
                 if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
                     rolNombre = usuario.getRoles().iterator().next().getNombre();
                 }
 
-                // Aseguramos que tenga el prefijo ROLE_ para estandarizar el JWT
                 String rolFinal = rolNombre.startsWith("ROLE_") ? rolNombre : "ROLE_" + rolNombre;
-
                 String token = jwtProvider.generateToken(usuario.getEmail(), rolFinal);
+
                 return ResponseEntity.ok(new AuthResponse(token));
             }
         }
@@ -69,8 +68,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: El correo ya está registrado.");
         }
 
-        // 🛑 CORRECCIÓN: Buscamos el rol ALUMNO por defecto para los registros nuevos,
-        // ¡no ADMIN!
         Optional<Rol> rolPorDefecto = rolRepository.findByNombre("ALUMNO");
         if (rolPorDefecto.isEmpty()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -86,8 +83,10 @@ public class AuthController {
         String contrasenaEncriptada = passwordEncoder.encode(request.getPassword());
         nuevoUsuario.setPassword(contrasenaEncriptada);
 
-        // Asignamos el rol ALUMNO
-        nuevoUsuario.setRoles(Set.of(rolPorDefecto.get()));
+        // 🛡️ SOLUCIÓN PARA HIBERNATE: Usar HashSet en lugar de Set.of()
+        Set<Rol> roles = new HashSet<>();
+        roles.add(rolPorDefecto.get());
+        nuevoUsuario.setRoles(roles);
 
         usuarioRepository.save(nuevoUsuario);
 
@@ -101,7 +100,6 @@ public class AuthController {
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
 
-            // 🛡️ ESCUDOS ANTI-NULLS: Solo guardamos si el frontend mandó algo válido
             if (request.getDni() != null && !request.getDni().trim().isEmpty()) {
                 usuario.setDni(request.getDni());
             }
@@ -111,8 +109,6 @@ public class AuthController {
             if (request.getDireccion() != null && !request.getDireccion().trim().isEmpty()) {
                 usuario.setDireccion(request.getDireccion());
             }
-
-            // CONVERSIÓN DE FECHA SEGURA
             if (request.getFechaNacimiento() != null && !request.getFechaNacimiento().trim().isEmpty()) {
                 usuario.setFechaNacimiento(LocalDate.parse(request.getFechaNacimiento()));
             }
@@ -123,49 +119,58 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
     }
 
-    // --- OBTENER DATOS PARA "MI PERFIL" ---
     @GetMapping("/me")
     public ResponseEntity<?> obtenerMiPerfil(@RequestParam String email) {
         return usuarioRepository.findByEmail(email)
-                .map(usuario -> {
-                    // Creamos un objeto simple con los datos
-                    return ResponseEntity.ok(usuario);
-                })
+                .map(usuario -> ResponseEntity.ok(usuario))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // --- NUEVO: LISTAR TODOS LOS USUARIOS (PANEL DE ADMINISTRADOR) ---
+    // --- LISTAR TODOS LOS USUARIOS (PANEL DE ADMINISTRADOR) ---
     @GetMapping("/usuarios")
     public ResponseEntity<List<Usuario>> listarTodosLosUsuarios() {
         List<Usuario> usuarios = usuarioRepository.findAll();
-        // Ocultamos las contraseñas antes de enviarlas al frontend por seguridad
         usuarios.forEach(u -> u.setPassword(null));
         return ResponseEntity.ok(usuarios);
     }
 
-    // --- NUEVO: ACTUALIZAR ROL DE UN USUARIO ---
+    // --- ACTUALIZAR ROL DE UN USUARIO (CON CORRECCIÓN 500) ---
     @PutMapping("/usuarios/{id}/rol")
     public ResponseEntity<?> cambiarRol(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        String nuevoRolNombre = body.get("rol"); // Viene como "ROLE_ADMIN" o "ROLE_ALUMNO" desde el JS
+        try {
+            String nuevoRolNombre = body.get("rol");
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
+            }
+
+            String rolLimpio = nuevoRolNombre.replace("ROLE_", "");
+
+            Optional<Rol> rolOpt = rolRepository.findByNombre(rolLimpio);
+            if (rolOpt.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("Error: El rol " + rolLimpio + " no existe en la base de datos.");
+            }
+
+            Usuario usuario = usuarioOpt.get();
+
+            // 🛡️ SOLUCIÓN PARA HIBERNATE: HashSet permite modificar la relación de base de
+            // datos sin explotar
+            Set<Rol> rolesActualizados = new HashSet<>();
+            rolesActualizados.add(rolOpt.get());
+
+            usuario.setRoles(rolesActualizados);
+            usuarioRepository.save(usuario);
+
+            return ResponseEntity.ok("Rol actualizado con éxito.");
+
+        } catch (Exception e) {
+            // Este catch atrapa cualquier explosión interna y te la imprime en Railway para
+            // no estar a ciegas
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor al guardar el rol.");
         }
-
-        // Limpiamos el prefijo "ROLE_" para buscarlo en la base de datos como "ADMIN" o
-        // "ALUMNO"
-        String rolLimpio = nuevoRolNombre.replace("ROLE_", "");
-
-        Optional<Rol> rolOpt = rolRepository.findByNombre(rolLimpio);
-        if (rolOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Error: El rol " + rolLimpio + " no existe en la base de datos.");
-        }
-
-        Usuario usuario = usuarioOpt.get();
-        usuario.setRoles(Set.of(rolOpt.get()));
-        usuarioRepository.save(usuario);
-
-        return ResponseEntity.ok("Rol actualizado con éxito.");
     }
 }
