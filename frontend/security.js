@@ -48,4 +48,12 @@
         localStorage.clear();
         window.location.href = 'login.html';
     }
+
+    // Función salvavidas para el menú en celulares
+function toggleMenuMobile() {
+    const sidebar = document.getElementById('sidebar');
+    if(sidebar) {
+        sidebar.classList.toggle('mostrar-mobile');
+    }
+}
 })();

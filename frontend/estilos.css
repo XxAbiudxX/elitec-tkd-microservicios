@@ -147,3 +147,32 @@ body {
     .main-content { margin-left: 0; padding: 20px; }
     .sidebar.active { margin-left: 0; }
 }
+
+/* =========================================
+   📱 RESPONSIVE Y VISTA MÓVIL
+   ========================================= */
+@media (max-width: 767.98px) {
+    /* 1. Escondemos el Sidebar fuera de la pantalla */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%; 
+        width: 260px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease-in-out;
+        background-color: #0a0a0a; /* Fondo oscuro sólido */
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    }
+    
+    /* 2. Clase que el botón activará para que el menú entre a la pantalla */
+    .sidebar.mostrar-mobile {
+        left: 0; 
+    }
+
+    /* 3. Ajustamos el contenido principal para que no se aplaste */
+    .main-content {
+        margin-left: 0 !important; /* Quitamos el margen del sidebar en PC */
+        padding: 15px; /* Un poco de respiro a los lados */
+    }
+}
