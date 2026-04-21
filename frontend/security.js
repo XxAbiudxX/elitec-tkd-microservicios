@@ -15,8 +15,7 @@
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(window.atob(base64));
 
-        // 3. Extraer Rol (¡AQUÍ ESTABA EL BUG!)
-        // Ahora buscamos 'payload.rol' primero, tal como lo manda tu JwtProvider.java
+        // 3. Extraer Rol
         let rol = payload.rol || payload.role || payload.roles || payload.authorities || 'ROLE_ALUMNO';
         
         // Si el rol viene como un Array, tomamos el primero
@@ -48,12 +47,34 @@
         localStorage.clear();
         window.location.href = 'login.html';
     }
+})(); // <-- LA JAULA DE SEGURIDAD TERMINA AQUÍ
 
-    // Función salvavidas para el menú en celulares
-function toggleMenuMobile() {
+
+// =========================================================
+// --- CONTROLADOR GLOBAL DEL MENÚ MÓVIL ---
+// Esto debe estar afuera para que el HTML pueda usarlo
+// =========================================================
+
+window.toggleMenuMobile = function() {
     const sidebar = document.getElementById('sidebar');
     if(sidebar) {
         sidebar.classList.toggle('mostrar-mobile');
     }
-}
-})();
+};
+
+// Cerrar el menú si se hace clic fuera de él (en la zona de contenido)
+document.addEventListener('DOMContentLoaded', () => {
+    const mainContent = document.querySelector('.main-content');
+    if(mainContent) {
+        mainContent.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            // Si el menú está abierto y hacemos clic en el contenido principal, lo cerramos
+            if(sidebar && sidebar.classList.contains('mostrar-mobile')) {
+                // Evitar que se cierre si justo hicimos clic en el botón de abrir
+                if(!e.target.closest('.d-md-none button')) {
+                    sidebar.classList.remove('mostrar-mobile');
+                }
+            }
+        });
+    }
+});

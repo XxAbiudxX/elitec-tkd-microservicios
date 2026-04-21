@@ -149,30 +149,31 @@ body {
 }
 
 /* =========================================
-   📱 RESPONSIVE Y VISTA MÓVIL
+   📱 RESPONSIVE Y VISTA MÓVIL (UNIFICADO)
    ========================================= */
-@media (max-width: 767.98px) {
-    /* 1. Escondemos el Sidebar fuera de la pantalla */
+
+@media (max-width: 991.98px) {
+    /* 1. El Sidebar se convierte en un panel lateral oculto por defecto */
     .sidebar {
         position: fixed;
         top: 0;
-        left: -100%; 
-        width: 260px;
+        left: -260px; /* Escondido fuera de la pantalla (mismo ancho que la variable) */
+        width: var(--sidebar-width);
         height: 100vh;
         z-index: 1050;
         transition: left 0.3s ease-in-out;
-        background-color: #0a0a0a; /* Fondo oscuro sólido */
+        background-color: #000;
         box-shadow: 5px 0 15px rgba(0,0,0,0.5);
     }
     
-    /* 2. Clase que el botón activará para que el menú entre a la pantalla */
+    /* 2. Cuando el botón añade esta clase, el panel se desliza hacia adentro */
     .sidebar.mostrar-mobile {
         left: 0; 
     }
 
-    /* 3. Ajustamos el contenido principal para que no se aplaste */
+    /* 3. El contenido principal ya no debe dejar espacio para el menú a la izquierda */
     .main-content {
-        margin-left: 0 !important; /* Quitamos el margen del sidebar en PC */
-        padding: 15px; /* Un poco de respiro a los lados */
+        margin-left: 0; 
+        padding: 15px; /* Menos padding en móviles para ganar espacio */
     }
 }
