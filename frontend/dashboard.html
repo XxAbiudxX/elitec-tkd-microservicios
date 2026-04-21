@@ -64,20 +64,42 @@
 
             // 1. Ocultar links de admin si no tiene el rol
             if (rol === 'ROLE_ALUMNO') {
-                document.getElementById('admin-links').style.display = 'none';
-                document.getElementById('widget-stats').style.display = 'none';
+                const adminLinks = document.getElementById('admin-links');
+                const widgetStats = document.getElementById('widget-stats');
+                
+                if(adminLinks) adminLinks.style.display = 'none';
+                if(widgetStats) widgetStats.style.display = 'none';
             } else {
-                // 2. Si es Admin, cargar el conteo de alumnos
+                // 2. Si es Admin, traer la lista de alumnos y contarlos
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/alumnos/count`, {
+                    // Quitamos el /count de la ruta para pedir la lista normal
+                    const res = await fetch(`${API_BASE_URL}/api/alumnos`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    const count = await res.json();
-                    document.getElementById('count-alumnos').innerText = count;
-                } catch (e) { console.error("Error al conectar con Student-Service"); }
+                    
+                    if (res.ok) {
+                        const listaAlumnos = await res.json();
+                        // Contamos cuántos elementos hay en la lista con .length
+                        const elementoConteo = document.getElementById('count-alumnos');
+                        if (elementoConteo) {
+                            elementoConteo.innerText = listaAlumnos.length;
+                        }
+                    }
+                } catch (e) { 
+                    console.error("Error al conectar con Student-Service"); 
+                }
             }
         });
 
+        // Función para el menú en celulares (Responsive)
+        function toggleMenuMobile() {
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar) {
+                sidebar.classList.toggle('mostrar-mobile');
+            }
+        }
+
+        // Función para salir
         function cerrarSesion() {
             localStorage.clear();
             window.location.href = 'login.html';
